@@ -13,32 +13,18 @@
                         <Icon class="navigation__link-icon" icon="fluent:movies-and-tv-20-regular" width="26px" />
                         <span class="navigation__link-text">ビデオをみる</span>
                     </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/timetable/"
-                        :class="{'navigation__link--active': $route.path.startsWith('/timetable')}">
+                    <a v-ripple class="navigation__link" active-class="navigation__link--active"
+                        :href='`https://epg.kanpanipage.com/#/guide?sso_relay=${WatchLoginUser.jws}`'>
                         <Icon class="navigation__link-icon" icon="fluent:calendar-ltr-20-regular" width="26px" />
                         <span class="navigation__link-text">番組表</span>
-                    </router-link>
+                    </a>
                     <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/reservations/"
                         :class="{'navigation__link--active': $route.path.startsWith('/reservations')}">
                         <Icon class="navigation__link-icon" icon="fluent:timer-16-regular" width="26px" style="padding: 0.5px;" />
                         <span class="navigation__link-text">録画予約</span>
                     </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/captures/"
-                        :class="{'navigation__link--active': $route.path.startsWith('/captures')}">
-                        <Icon class="navigation__link-icon" icon="fluent:image-multiple-24-regular" width="26px" />
-                        <span class="navigation__link-text">キャプチャ</span>
-                    </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/mylist/"
-                        :class="{'navigation__link--active': $route.path.startsWith('/mylist')}">
-                        <Icon class="navigation__link-icon" icon="ic:round-playlist-play" width="26px" />
-                        <span class="navigation__link-text">マイリスト</span>
-                    </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/watched-history/"
-                        :class="{'navigation__link--active': $route.path.startsWith('/watched-history')}">
-                        <Icon class="navigation__link-icon" icon="fluent:history-20-regular" width="26px" />
-                        <span class="navigation__link-text">視聴履歴</span>
-                    </router-link>
                     <v-spacer></v-spacer>
+                    <span class="navigation__link-text">USER {{WatchLoginUser.name}}</span>
                     <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/settings/"
                         :class="{'navigation__link--active': $route.path.startsWith('/settings')}">
                         <Icon class="navigation__link-icon" icon="fluent:settings-20-regular" width="26px" />
@@ -64,10 +50,11 @@
 <script lang="ts">
 
 import { mapStores } from 'pinia';
-import { defineComponent } from 'vue';
+import { defineComponent, reactive } from 'vue';
 
 import BottomNavigation from '@/components/BottomNavigation.vue';
 import useVersionStore from '@/stores/VersionStore';
+import Utils from '@/utils';
 
 export default defineComponent({
     name: 'Navigation',
@@ -76,6 +63,23 @@ export default defineComponent({
     },
     computed: {
         ...mapStores(useVersionStore),
+    },
+    setup() {
+        const watch_jwt = Utils.getWatchToken();
+        const watch_jwt_str = Utils.getWatchTokenJWS();
+
+        let watch_name = '読み込み中';
+        if(watch_jwt != null)watch_name = watch_jwt['dsp'];
+        let relay_jws = '';
+        if(watch_jwt_str != null)relay_jws = watch_jwt_str;
+
+        const WatchLoginUser = reactive<{ name: string, jws: string }>({
+            name: watch_name,
+            jws: relay_jws
+        });
+        return {
+            WatchLoginUser
+        };
     },
     async created() {
         await this.versionStore.fetchServerVersion();

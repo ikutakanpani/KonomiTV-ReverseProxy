@@ -2,8 +2,8 @@
 import mitt from 'mitt';
 import { defineStore } from 'pinia';
 
-import { ITweetCapture } from '@/components/Watch/Panel/Twitter.vue';
-import { ICommentData } from '@/services/player/managers/LiveCommentManager';
+//import { ITweetCapture } from '@/components/Watch/Panel/Twitter.vue';
+//import { ICommentData } from '@/services/player/managers/LiveCommentManager';
 import { IRecordedProgram, IRecordedProgramDefault } from '@/services/Videos';
 import useSettingsStore from '@/stores/SettingsStore';
 
@@ -32,20 +32,6 @@ export type PlayerEvents = {
         event?: Event;  // マウスやタッチイベント (手動実行する際は省略する)
         is_player_region_event?: boolean;  // プレイヤー画面の中で発火したイベントなら true に設定する
         timeout_seconds?: number;  // 何も操作がない場合にコントロール UI を非表示にするまでの秒数
-    }
-    // CaptureManager からキャプチャの撮影が完了したことを通知する
-    CaptureCompleted: {
-        capture: Blob;  // キャプチャの Blob
-        filename: string;  // キャプチャのファイル名 (UI からの手動ダウンロード時に使う)
-    };
-    // LiveCommentManager からコメントを受信したことを通知する
-    CommentReceived: {
-        is_initial_comments: boolean;  // 初期コメントかどうか
-        comments: ICommentData[];  // コメントデータのリスト
-    }
-    // ライブ視聴: LiveCommentManager からコメントを送信したことを通知する
-    CommentSendCompleted: {
-        comment: ICommentData;  // 送信したコメントデータ (を整形したもの)
     }
     // 録画再生時: 再生位置が変更されたことを通知する
     PlaybackPositionChanged: {
@@ -161,19 +147,19 @@ const usePlayerStore = defineStore('player', {
 
         // Twitter パネルコンポーネントで利用する、ツイート添付候補のキャプチャのリスト
         // UI 上と KeyboardShortcutManager の両方から操作する必要があるため PlayerStore に持たせている
-        twitter_captures: [] as ITweetCapture[],
+        //twitter_captures: [] as ITweetCapture[],
 
         // Twitter パネルコンポーネントで利用する、ツイートに添付するキャプチャの Blob データのリスト
         // Twitter パネル本体とキャプチャタブの間で共有するため PlayerStore に持たせている
-        twitter_selected_capture_blobs: [] as Blob[],
+        //twitter_selected_capture_blobs: [] as Blob[],
 
         // Twitter パネルコンポーネントで利用する、キャプチャを拡大表示するモーダルの表示状態
         // UI 上と KeyboardShortcutManager の両方から操作する必要があるため PlayerStore に持たせている
-        twitter_zoom_capture_modal: false,
+        //twitter_zoom_capture_modal: false,
 
         // Twitter パネルコンポーネントで利用する、現在モーダルで拡大表示中のキャプチャ
         // UI 上と KeyboardShortcutManager の両方から操作する必要があるため PlayerStore に持たせている
-        twitter_zoom_capture: null as ITweetCapture | null,
+        //twitter_zoom_capture: null as ITweetCapture | null,
     }),
     actions: {
 
@@ -232,9 +218,6 @@ const usePlayerStore = defineStore('player', {
             this.shortcut_key_modal = false;
             this.live_stream_status = null;
             this.live_comment_init_failed_message = null;
-            this.twitter_captures = [];
-            this.twitter_zoom_capture_modal = false;
-            this.twitter_zoom_capture = null;
         }
     }
 });

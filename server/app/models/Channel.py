@@ -20,7 +20,7 @@ from app.constants import HTTPX_CLIENT
 from app.utils import GetMirakurunAPIEndpointURL
 from app.utils.edcb.CtrlCmdUtil import CtrlCmdUtil
 from app.utils.edcb.EDCBUtil import EDCBUtil
-from app.utils.JikkyoClient import JikkyoClient
+#from app.utils.JikkyoClient import JikkyoClient
 from app.utils.TSInformation import TSInformation
 
 
@@ -501,26 +501,3 @@ class Channel(TortoiseModel):
         # 現在の番組情報、次の番組情報のタプルを返す
         return (program_present, program_following)
 
-
-    @classmethod
-    async def updateJikkyoStatus(cls) -> None:
-        """ チャンネル情報のうち、ニコニコ実況関連のステータスを更新する """
-
-        # 全ての実況チャンネルのステータスを更新
-        await JikkyoClient.updateStatuses()
-
-        # 全てのチャンネル情報を取得
-        channels = await Channel.filter(is_watchable=True)
-
-        # チャンネル情報ごとに
-        for channel in channels:
-
-            # 実況チャンネルのステータスを取得
-            jikkyo_client = JikkyoClient(channel.network_id, channel.service_id)
-            status = await jikkyo_client.getStatus()
-
-            # ステータスが None（実況チャンネル自体が存在しないか、コミュニティの場合で実況枠が存在しない）でなく、
-            # force が -1 (何らかのエラー) でなければステータスを更新
-            if status is not None and status['force'] != -1:
-                channel.jikkyo_force = status['force']
-                await channel.save()

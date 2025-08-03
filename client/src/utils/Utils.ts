@@ -35,6 +35,37 @@ export default class Utils {
         return localStorage.getItem('KonomiTV-AccessToken');
     }
 
+    /**
+     * 視聴トークンを cookie から取得する オリジナル
+     * @returns JWT アクセストークン（ログインしていない場合は null が返る）
+     */
+    static getWatchToken(): string | null {
+        const base64UrlDecode = (base64Url) => {
+            return window.atob(base64Url.replace(/-/g, '+').replace(/_/g, '/'));
+        };
+
+        const decodeJwt = (token) => {
+            const base64Url = token.split('.')[1];
+            return JSON.parse(base64UrlDecode(base64Url));
+        };
+
+        const jws = localStorage.getItem('ssojws_tv');
+        if(jws == null)return null;
+
+        return decodeJwt(jws);
+    }
+
+    /**
+     * JWSを cookie から取得する オリジナル
+     * @returns JWT アクセストークン（ログインしていない場合は null が返る）
+     */
+    static getWatchTokenJWS(): string | null {
+        const jws = localStorage.getItem('ssojws_tv');
+        if(jws == null)return null;
+
+        return jws;
+    }
+
 
     /**
      * アクセストークンを LocalStorage に保存する

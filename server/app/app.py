@@ -23,20 +23,20 @@ from app.constants import (
 from app.metadata.RecordedScanTask import RecordedScanTask
 from app.models.Channel import Channel
 from app.models.Program import Program
-from app.models.TwitterAccount import TwitterAccount
+#from app.models.TwitterAccount import TwitterAccount
 from app.routers import (
-    CapturesRouter,
+    #CapturesRouter,
     ChannelsRouter,
     DataBroadcastingRouter,
     LiveStreamsRouter,
     MaintenanceRouter,
-    NiconicoRouter,
+    #NiconicoRouter,
     ProgramsRouter,
     ReservationConditionsRouter,
     ReservationsRouter,
     SeriesRouter,
     SettingsRouter,
-    TwitterRouter,
+    #TwitterRouter,
     UsersRouter,
     VersionRouter,
     VideosRouter,
@@ -74,10 +74,10 @@ app.include_router(LiveStreamsRouter.router)
 app.include_router(VideoStreamsRouter.router)
 app.include_router(ReservationsRouter.router)
 app.include_router(ReservationConditionsRouter.router)
-app.include_router(CapturesRouter.router)
+#app.include_router(CapturesRouter.router)
 app.include_router(DataBroadcastingRouter.router)
-app.include_router(NiconicoRouter.router)
-app.include_router(TwitterRouter.router)
+#app.include_router(NiconicoRouter.router)
+#app.include_router(TwitterRouter.router)
 app.include_router(UsersRouter.router)
 app.include_router(SettingsRouter.router)
 app.include_router(MaintenanceRouter.router)
@@ -186,13 +186,13 @@ async def Startup():
     await Channel.update()
 
     # ニコニコ実況関連のステータスを更新
-    await Channel.updateJikkyoStatus()
+    # await Channel.updateJikkyoStatus()
 
     # 番組情報を更新
     await Program.update()
 
     # 登録されている Twitter アカウントの情報を更新
-    await TwitterAccount.updateAccountsInformation()
+    # await TwitterAccount.updateAccountsInformation()
 
     # 全てのチャンネル&品質のライブストリームを初期化する
     for channel in await Channel.filter(is_watchable=True).order_by('channel_number'):
@@ -216,20 +216,20 @@ async def Startup():
 )
 async def UpdateChannelAndProgram():
     await Channel.update()
-    await Channel.updateJikkyoStatus()
+    #await Channel.updateJikkyoStatus()
     await Program.update(multiprocess=True)
 
 # 30秒に1回、ニコニコ実況関連のステータスを更新する
-@app.on_event('startup')
-@repeat_every(seconds=0.5 * 60, wait_first=0.5 * 60, logger=logging.logger)
-async def UpdateChannelJikkyoStatus():
-    await Channel.updateJikkyoStatus()
+#@app.on_event('startup')
+#@repeat_every(seconds=0.5 * 60, wait_first=0.5 * 60, logger=logging.logger)
+#async def UpdateChannelJikkyoStatus():
+#    await Channel.updateJikkyoStatus()
 
 # 1時間に1回、登録されている Twitter アカウントの情報を更新する
-@app.on_event('startup')
-@repeat_every(seconds=60 * 60, wait_first=60 * 60, logger=logging.logger)
-async def UpdateTwitterAccountInformation():
-    await TwitterAccount.updateAccountsInformation()
+#@app.on_event('startup')
+#@repeat_every(seconds=60 * 60, wait_first=60 * 60, logger=logging.logger)
+#async def UpdateTwitterAccountInformation():
+#    await TwitterAccount.updateAccountsInformation()
 
 # サーバーの終了時に実行する
 cleanup = False

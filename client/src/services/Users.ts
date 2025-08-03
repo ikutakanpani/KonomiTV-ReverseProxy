@@ -55,30 +55,7 @@ class Users {
      * @returns 作成したユーザーアカウントの情報 or アカウント作成に失敗した場合は null
      */
     static async createUser(user_create_request: IUserCreateRequest): Promise<IUser | null> {
-
-        // API リクエストを実行
-        const response = await APIClient.post<IUser>('/users', user_create_request);
-
-        // エラー処理
-        if (response.type === 'error') {
-            switch (response.data.detail) {
-                case 'Specified username is duplicated': {
-                    Message.error('ユーザー名が重複しています。');
-                    break;
-                }
-                case 'Specified username is not accepted due to system limitations': {
-                    Message.error('ユーザー名に token と me は使えません。');
-                    break;
-                }
-                default: {
-                    APIClient.showGenericError(response, 'アカウントを作成できませんでした。');
-                    break;
-                }
-            }
-            return null;
-        }
-
-        return response.data;
+        return null;
     }
 
 
@@ -89,30 +66,7 @@ class Users {
      * @returns 発行したアクセストークン or ログインに失敗した場合は null
      */
     static async createUserAccessToken(username: string, password: string): Promise<IUserAccessToken | null> {
-
-        // API リクエストを実行
-        const response = await APIClient.post<IUserAccessToken>('/users/token', new URLSearchParams({username, password}));
-
-        // エラー処理
-        if (response.type === 'error') {
-            switch (response.data.detail) {
-                case 'Incorrect username': {
-                    Message.error('ログインできませんでした。そのユーザー名のアカウントは存在しません。');
-                    break;
-                }
-                case 'Incorrect password': {
-                    Message.error('ログインできませんでした。パスワードを間違えていませんか？');
-                    break;
-                }
-                default: {
-                    APIClient.showGenericError(response, 'ログインできませんでした。');
-                    break;
-                }
-            }
-            return null;
-        }
-
-        return response.data;
+        return null;
     }
 
 
@@ -125,13 +79,36 @@ class Users {
         // API リクエストを実行
         const response = await APIClient.get<IUser>('/users/me');
 
-        // エラー処理
         if (response.type === 'error') {
             APIClient.showGenericError(response, 'アカウント情報を取得できませんでした。');
             return null;
         }
 
-        return response.data;
+        // ヘッダから取得
+        const headers = response.headers;
+        const userId = Number(headers['x-webauth-id']);
+        const isAdmin = headers['x-webauth-admin'] === '1';
+        const username = headers['x-webauth-user'];
+
+        if (!username || isNaN(userId)) {
+            Message.error('ユーザー情報の取得に失敗しました。');
+            return null;
+        }
+
+        // 必要な項目のみ設定して返す（残りは null または初期値）
+        const user: IUser = {
+            id: userId,
+            name: username,
+            is_admin: isAdmin,
+            niconico_user_id: null,
+            niconico_user_name: null,
+            niconico_user_premium: null,
+            twitter_accounts: [],
+            created_at: '', // サーバが返していないので空に
+            updated_at: ''
+        };
+
+        return user;
     }
 
 
@@ -140,17 +117,7 @@ class Users {
      * @returns ログイン中のユーザーアカウントのアイコンの Blob URL or ログインしていない場合は null
      */
     static async fetchUserIcon(): Promise<string | null> {
-
-        // API リクエストを実行
-        const response = await APIClient.get('/users/me/icon', {responseType: 'blob'});
-
-        // エラー処理
-        if (response.type === 'error') {
-            APIClient.showGenericError(response, 'アイコン画像を取得できませんでした。');
-            return null;
-        }
-
-        return URL.createObjectURL(response.data);
+        return null;
     }
 
 
@@ -160,30 +127,7 @@ class Users {
      * @returns 更新に成功した場合は true
      */
     static async updateUser(user_update_request: IUserUpdateRequest): Promise<boolean> {
-
-        // API リクエストを実行
-        const response = await APIClient.put('/users/me', user_update_request);
-
-        // エラー処理
-        if (response.type === 'error') {
-            switch (response.data.detail) {
-                case 'Specified username is duplicated': {
-                    Message.error('ユーザー名が重複しています。');
-                    break;
-                }
-                case 'Specified username is not accepted due to system limitations': {
-                    Message.error('ユーザー名に token と me は使えません。');
-                    break;
-                }
-                default: {
-                    APIClient.showGenericError(response, 'アカウント情報を更新できませんでした。');
-                    break;
-                }
-            }
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
 
@@ -192,30 +136,7 @@ class Users {
      * @param icon アイコンの File オブジェクト
      */
     static async updateUserIcon(icon: File): Promise<void> {
-
-        // アイコン画像の File オブジェクト (= Blob) を FormData に入れる
-        // multipart/form-data で送るために必要
-        // ref: https://r17n.page/2020/02/04/nodejs-axios-file-upload-api/
-        const form_data = new FormData();
-        form_data.append('image', icon);
-
-        // API リクエストを実行
-        const response = await APIClient.put('/users/me/icon', form_data, {headers: {'Content-Type': 'multipart/form-data'}});
-
-        // エラー処理
-        if (response.type === 'error') {
-            switch (response.data.detail) {
-                case 'Please upload JPEG or PNG image': {
-                    Message.error('JPEG または PNG 画像をアップロードしてください。');
-                    break;
-                }
-                default: {
-                    APIClient.showGenericError(response, 'アイコン画像を更新できませんでした。');
-                    break;
-                }
-            }
-            return;
-        }
+        return;
     }
 
 
@@ -223,15 +144,7 @@ class Users {
      * 現在ログイン中のユーザーアカウントを削除する
      */
     static async deleteUser(): Promise<void> {
-
-        // API リクエストを実行
-        const response = await APIClient.delete('/users/me');
-
-        // エラー処理
-        if (response.type === 'error') {
-            APIClient.showGenericError(response, 'アカウントを削除できませんでした。');
-            return;
-        }
+        return;
     }
 
 

@@ -2,6 +2,7 @@
 import asyncio
 import socket
 import time
+import base64
 from typing import Annotated
 
 import httpx
@@ -39,6 +40,7 @@ async def BMLBrowserRequestGETProxyAPI(
     """
 
     # URLが HTTP または HTTPS URL かのバリデーション
+    request_url = base64.urlsafe_b64decode( request_url ).decode()
     if not (request_url.startswith("http://") or request_url.startswith("https://")):
         logging.error(f'[DataBroadcastingRouter][BMLBrowserRequestGETProxyAPI] Request URL must be http or https URL: {request_url}')
         raise HTTPException(
@@ -108,6 +110,7 @@ async def BMLBrowserRequestPOSTProxyAPI(
     """
 
     # URLが HTTP または HTTPS URL かのバリデーション
+    request_url = base64.urlsafe_b64decode( request_url ).decode()
     if not (request_url.startswith("http://") or request_url.startswith("https://")):
         logging.error(f'[DataBroadcastingRouter][BMLBrowserRequestPOSTProxyAPI] Request URL must be http or https URL: {request_url}')
         raise HTTPException(

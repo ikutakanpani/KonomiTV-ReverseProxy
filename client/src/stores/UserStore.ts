@@ -125,17 +125,6 @@ const useUserStore = defineStore('user', {
          */
         async fetchUser(force: boolean = false): Promise<IUser | null> {
 
-            // LocalStorage にアクセストークンが保存されていない場合 (= 非ログイン状態) は常に null を返す
-            if (Utils.getAccessToken() === null) {
-                return null;
-            }
-
-            // すでにログイン済みのユーザーアカウントの情報がある場合はそれを返す
-            // force が true の場合は無視される
-            if (this.user !== null && force === false) {
-                return this.user;
-            }
-
             // ユーザーアカウントの情報を取得する
             const user = await Users.fetchUser();
             if (user === null) {
@@ -147,13 +136,7 @@ const useUserStore = defineStore('user', {
             }
             this.is_logged_in = true;
             this.user = user;
-
-            // ユーザーアカウントのアイコン画像の Blob URL を取得する
-            const user_icon_url = await Users.fetchUserIcon();
-            if (user_icon_url === null) {
-                return null;
-            }
-            this.user_icon_url = user_icon_url;
+            this.user_icon_url = '';
 
             return this.user;
         },
@@ -163,22 +146,8 @@ const useUserStore = defineStore('user', {
          * @param user_update_request ユーザー名 or パスワード
          */
         async updateUser(user_update_request: IUserUpdateRequest): Promise<void> {
-
-            // ユーザーアカウントの情報を更新する
-            const result = await Users.updateUser(user_update_request);
-            if (result === false) {
-                console.log('Update user failed.');
-                return;  // 更新失敗 (エラーハンドリングは services 層で行われる)
-            }
-
             // ユーザーアカウントの情報を再取得する
             await this.fetchUser(true);
-
-            if (user_update_request.username !== undefined) {
-                Message.show('ユーザー名を更新しました。');
-            } else if (user_update_request.password !== undefined) {
-                Message.show('パスワードを更新しました。');
-            }
         },
 
         /**

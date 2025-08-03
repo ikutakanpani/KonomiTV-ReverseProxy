@@ -246,7 +246,7 @@ class LiveDataBroadcastingManager implements PlayerManager {
                             return {};
                         }
                         // サーバー側のプロキシ API 経由で HTTP GET リクエストを送信する
-                        const response = await APIClient.get<ArrayBuffer>(`/data-broadcasting/request/${uri}`, {
+                        const response = await APIClient.get<ArrayBuffer>(`/data-broadcasting/request/${window.btoa(uri).replace(/\+/g, '-').replace(/\//g, '_')}`, {
                             // レスポンスを ArrayBuffer として受け取る
                             responseType: 'arraybuffer',
                             // すべてのステータスコードで AxiosError にならないようにする
@@ -274,7 +274,7 @@ class LiveDataBroadcastingManager implements PlayerManager {
                             };
                         }
                         // サーバー側のプロキシ API 経由で HTTP POST リクエストを送信する
-                        const response = await APIClient.post<ArrayBuffer>(`/data-broadcasting/request/${uri}`, body, {
+                        const response = await APIClient.post<ArrayBuffer>(`/data-broadcasting/request/${window.btoa(uri).replace(/\+/g, '-').replace(/\//g, '_')}`, body, {
                             // 受け取ったフォームデータをそのまま送信する
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             // レスポンスを ArrayBuffer として受け取る

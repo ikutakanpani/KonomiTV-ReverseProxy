@@ -103,12 +103,6 @@ const LIVE_SHORTCUT_LIST: IShortcutList = {
                 { name: 'フルスクリーンの切り替え', keys: [{name: 'F', icon: false}] },
                 { name: 'Picture-in-Picture の表示切り替え', keys: [{name: 'E', icon: false}] },
                 { name: '字幕の表示切り替え', keys: [{name: 'S', icon: false}] },
-                { name: 'コメントの表示切り替え', keys: [{name: 'D', icon: false}] },
-                { name: '映像をキャプチャする', keys: [{name: 'C', icon: false}] },
-                { name: '映像をコメントを付けてキャプチャする', keys: [{name: 'V', icon: false}] },
-                { name: 'コメント入力フォームにフォーカスする', keys: [{name: 'M', icon: false}] },
-                { name: 'コメント入力フォームを閉じる', keys: [{name: Utils.CtrlOrCmd(), icon: false}, {name: 'M', icon: false}] },
-                { name: 'コメントを送信する', keys: [{name: 'コメント入力フォームを表示', icon: false}, {name: 'Enter', icon: false}] },
             ]
         },
     ],
@@ -123,24 +117,6 @@ const LIVE_SHORTCUT_LIST: IShortcutList = {
                 { name: 'チャンネルタブを表示する', keys: [{name: 'L', icon: false}] },
                 { name: 'コメントタブを表示する', keys: [{name: '；(＋)', icon: false}] },
                 { name: 'Twitter タブを表示する', keys: [{name: '：(＊)', icon: false}] },
-            ]
-        },
-        {
-            name: 'Twitter',
-            icon: 'fa-brands:twitter',
-            icon_height: '22px',
-            shortcuts: [
-                { name: 'ツイート検索タブを表示する', keys: [{name: '［ (「)', icon: false}] },
-                { name: 'タイムラインタブを表示する', keys: [{name: '］ (」)', icon: false}] },
-                { name: 'キャプチャタブを表示する', keys: [{name: '_', icon: false}] },
-                { name: '検索結果を更新する', keys: [{name: 'ツイート検索タブを表示', icon: false}, {name: '＼(｜)', icon: false}] },
-                { name: 'タイムラインを更新する', keys: [{name: 'タイムラインタブを表示', icon: false}, {name: '＼(｜)', icon: false}] },
-                { name: 'キャプチャにフォーカスする', keys: [{name: 'キャプチャタブを表示', icon: false}, {name: 'fluent:arrow-up-12-filled;fluent:arrow-down-12-filled;fluent:arrow-left-12-filled;fluent:arrow-right-12-filled', icon: true}] },
-                { name: 'キャプチャを拡大表示する/<br>キャプチャの拡大表示を閉じる', keys: [{name: 'キャプチャにフォーカス', icon: false}, {name: 'Enter', icon: false}] },
-                { name: 'キャプチャを選択する/<br>キャプチャの選択を解除する', keys: [{name: 'キャプチャにフォーカス', icon: false}, {name: 'Space', icon: false}] },
-                { name: 'ツイート入力フォームにフォーカスを当てる/フォーカスを外す', keys: [{name: 'Tab', icon: false}] },
-                { name: 'ツイートを送信する', keys: [{name: 'Twitter タブを表示', icon: false}, {name: Utils.CtrlOrCmd(), icon: false}, {name: 'Enter', icon: false}] },
-                { name: 'クリップボード内の画像を<br>キャプチャとして取り込む', keys: [{name: 'ツイート入力<br>フォームにフォーカス', icon: false}, {name: Utils.CtrlOrCmd(), icon: false}, {name: 'V', icon: false}] },
             ]
         },
         {
@@ -196,10 +172,6 @@ const VIDEO_SHORTCUT_LIST: IShortcutList = {
                 { name: 'プレイヤーを再起動する', keys: [{name: 'R', icon: false}] },
                 { name: 'フルスクリーンの切り替え', keys: [{name: 'F', icon: false}] },
                 { name: 'Picture-in-Picture の表示切り替え', keys: [{name: 'E', icon: false}] },
-                { name: '字幕の表示切り替え', keys: [{name: 'S', icon: false}] },
-                { name: 'コメントの表示切り替え', keys: [{name: 'D', icon: false}] },
-                { name: '映像をキャプチャする', keys: [{name: 'C', icon: false}] },
-                { name: '映像をコメントを付けてキャプチャする', keys: [{name: 'V', icon: false}] },
             ]
         },
     ],
@@ -212,26 +184,6 @@ const VIDEO_SHORTCUT_LIST: IShortcutList = {
                 { name: 'パネルの表示切り替え', keys: [{name: 'P', icon: false}] },
                 { name: '番組情報タブを表示する', keys: [{name: 'K', icon: false}] },
                 { name: 'シリーズタブを表示する', keys: [{name: 'L', icon: false}] },
-                { name: 'コメントタブを表示する', keys: [{name: '；(＋)', icon: false}] },
-                { name: 'Twitter タブを表示する', keys: [{name: '：(＊)', icon: false}] },
-            ]
-        },
-        {
-            name: 'Twitter',
-            icon: 'fa-brands:twitter',
-            icon_height: '22px',
-            shortcuts: [
-                { name: 'ツイート検索タブを表示する', keys: [{name: '［ (「)', icon: false}] },
-                { name: 'タイムラインタブを表示する', keys: [{name: '］ (」)', icon: false}] },
-                { name: 'キャプチャタブを表示する', keys: [{name: '_', icon: false}] },
-                { name: '検索結果を更新する', keys: [{name: 'ツイート検索タブを表示', icon: false}, {name: '＼(｜)', icon: false}] },
-                { name: 'タイムラインを更新する', keys: [{name: 'タイムラインタブを表示', icon: false}, {name: '＼(｜)', icon: false}] },
-                { name: 'キャプチャにフォーカスする', keys: [{name: 'キャプチャタブを表示', icon: false}, {name: 'fluent:arrow-up-12-filled;fluent:arrow-down-12-filled;fluent:arrow-left-12-filled;fluent:arrow-right-12-filled', icon: true}] },
-                { name: 'キャプチャを拡大表示する/<br>キャプチャの拡大表示を閉じる', keys: [{name: 'キャプチャにフォーカス', icon: false}, {name: 'Enter', icon: false}] },
-                { name: 'キャプチャを選択する/<br>キャプチャの選択を解除する', keys: [{name: 'キャプチャにフォーカス', icon: false}, {name: 'Space', icon: false}] },
-                { name: 'ツイート入力フォームにフォーカスを当てる/フォーカスを外す', keys: [{name: 'Tab', icon: false}] },
-                { name: 'ツイートを送信する', keys: [{name: 'Twitter タブを表示', icon: false}, {name: Utils.CtrlOrCmd(), icon: false}, {name: 'Enter', icon: false}] },
-                { name: 'クリップボード内の画像を<br>キャプチャとして取り込む', keys: [{name: 'ツイート入力<br>フォームにフォーカス', icon: false}, {name: Utils.CtrlOrCmd(), icon: false}, {name: 'V', icon: false}] },
             ]
         },
     ],

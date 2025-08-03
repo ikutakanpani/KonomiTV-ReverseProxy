@@ -22,10 +22,6 @@
                 :class="{'watch-panel__content--active': panel_active_tab === 'Channel'}" />
             <Series class="watch-panel__content" v-if="playback_mode === 'Video'"
                 :class="{'watch-panel__content--active': panel_active_tab === 'Series'}" />
-            <Comment class="watch-panel__content" :playback_mode="playback_mode"
-                :class="{'watch-panel__content--active': panel_active_tab === 'Comment'}" />
-            <Twitter class="watch-panel__content" :playback_mode="playback_mode"
-                :class="{'watch-panel__content--active': panel_active_tab === 'Twitter'}" />
             <button v-ripple class="watch-panel__content-remocon-button elevation-8" v-if="playback_mode === 'Live'"
                 :class="{'watch-panel__content-remocon-button--active': panel_active_tab === 'Program' || panel_active_tab === 'Channel'}"
                 @click="playerStore.is_remocon_display = !playerStore.is_remocon_display">
@@ -54,25 +50,6 @@
                 <Icon class="panel-navigation-button__icon" icon="fa-solid:broadcast-tower" width="34px" />
                 <span class="panel-navigation-button__text">チャンネル</span>
             </div>
-            <div v-ripple class="panel-navigation-button" v-if="playback_mode === 'Video'"
-                 :class="{'panel-navigation-button--active': panel_active_tab === 'Series'}"
-                 @click="playerStore.video_panel_active_tab = 'Series'">
-                <Icon class="panel-navigation-button__icon" icon="fluent:video-clip-multiple-16-filled" width="34px"
-                    style="width: 39px; height: 39px; margin-top: -4px; margin-bottom: -4px;" />
-                <span class="panel-navigation-button__text">シリーズ</span>
-            </div>
-            <div v-ripple class="panel-navigation-button"
-                 :class="{'panel-navigation-button--active': panel_active_tab === 'Comment'}"
-                 @click="playback_mode === 'Live' ? playerStore.tv_panel_active_tab = 'Comment' : playerStore.video_panel_active_tab = 'Comment'">
-                <Icon class="panel-navigation-button__icon" icon="bi:chat-left-text-fill" width="29px" />
-                <span class="panel-navigation-button__text">コメント</span>
-            </div>
-            <div v-ripple class="panel-navigation-button"
-                 :class="{'panel-navigation-button--active': panel_active_tab === 'Twitter'}"
-                 @click="playback_mode === 'Live' ? playerStore.tv_panel_active_tab = 'Twitter' : playerStore.video_panel_active_tab = 'Twitter'">
-                <Icon class="panel-navigation-button__icon" icon="fa-brands:twitter" width="34px" />
-                <span class="panel-navigation-button__text">Twitter</span>
-            </div>
         </div>
     </div>
 </template>
@@ -82,12 +59,12 @@ import { mapStores } from 'pinia';
 import { defineComponent, PropType } from 'vue';
 
 import Channel from '@/components/Watch/Panel/Channel.vue';
-import Comment from '@/components/Watch/Panel/Comment.vue';
+//import Comment from '@/components/Watch/Panel/Comment.vue';
 import Program from '@/components/Watch/Panel/Program.vue';
 import RecordedProgram from '@/components/Watch/Panel/RecordedProgram.vue';
 import Remocon from '@/components/Watch/Panel/Remocon.vue';
 import Series from '@/components/Watch/Panel/Series.vue';
-import Twitter from '@/components/Watch/Panel/Twitter.vue';
+//import Twitter from '@/components/Watch/Panel/Twitter.vue';
 import useChannelsStore from '@/stores/ChannelsStore';
 import usePlayerStore from '@/stores/PlayerStore';
 import Utils from '@/utils';
@@ -96,12 +73,12 @@ export default defineComponent({
     name: 'Watch-Panel',
     components: {
         Channel,
-        Comment,
+        //Comment,
         Program,
         RecordedProgram,
         Remocon,
         Series,
-        Twitter,
+        //Twitter,
     },
     props: {
         playback_mode: {

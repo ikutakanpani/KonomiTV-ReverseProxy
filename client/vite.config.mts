@@ -123,7 +123,9 @@ export default defineConfig({
                 // 古いキャッシュを自動削除する
                 cleanupOutdatedCaches: true,
                 // /api/ 以下のリクエストでは index.html を返さない
-                navigateFallbackDenylist: [/^\/api/],
+                navigateFallbackDenylist: [/^\/api/, /^\/sso/],
+                //キャッシュ除外
+                globIgnores: ['/sso/*'],
                 // キャッシュするファイルの最大サイズ
                 maximumFileSizeToCacheInBytes: 1024 * 1024 * 15,  // 15MB
             }

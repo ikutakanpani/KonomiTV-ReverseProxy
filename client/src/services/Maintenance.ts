@@ -24,20 +24,12 @@ class Maintenance {
         // リクエストを中止するための AbortController
         const abort_controller = new AbortController();
 
-        // アクセストークンを取得
-        const access_token = Utils.getAccessToken();
-        if (access_token === null) {
-            Message.error('サーバーログの表示には管理者権限が必要です。\n管理者アカウントでログインし直してください。');
-            return null;
-        }
-
         // EventStream の受信を開始する
         fetchEventSource(`${Utils.api_base_url}/maintenance/logs/${log_type}`, {
             method: 'GET',
             signal: abort_controller.signal,
             // 認証ヘッダーを設定
             headers: {
-                'Authorization': `Bearer ${access_token}`,
                 'X-KonomiTV-Version': Utils.version,
             },
             // ブラウザタブが非アクティブな時も接続を維持する

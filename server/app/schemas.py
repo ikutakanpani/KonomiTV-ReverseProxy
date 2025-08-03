@@ -189,12 +189,12 @@ class User(PydanticModel):
     id: int
     name: str
     is_admin: bool
-    niconico_user_id: int | None
-    niconico_user_name: str | None
-    niconico_user_premium: bool | None
-    twitter_accounts: list[TwitterAccount]  # 追加カラム
-    created_at: datetime
-    updated_at: datetime
+    #niconico_user_id: int | None
+    #niconico_user_name: str | None
+    #niconico_user_premium: bool | None
+    #twitter_accounts: list[TwitterAccount]  # 追加カラム
+    #created_at: datetime
+    #updated_at: datetime
 
 class Users(RootModel[list[User]]):
     pass

@@ -33,9 +33,9 @@ from app.models.Channel import Channel
 from app.models.Program import Program
 from app.models.RecordedProgram import RecordedProgram
 from app.models.RecordedVideo import RecordedVideo
-from app.models.TwitterAccount import TwitterAccount
+#from app.models.TwitterAccount import TwitterAccount
 from app.models.User import User
-from app.routers.UsersRouter import GetCurrentAdminUser, GetCurrentUser
+from app.routers.UsersRouter import GetCurrentAdminUser, GetCurrentUserFromHeaders
 
 
 # ルーター
@@ -52,28 +52,13 @@ background_analysis_task: asyncio.Task[None] | None = None
 
 async def GetCurrentAdminUserOrLocal(
     request: Request,
-    token: Annotated[str | None, Depends(OAuth2PasswordBearer(tokenUrl='users/token', auto_error=False))],
 ) -> User | None:
     """
     現在管理者ユーザーでログインしているか、http://127.0.0.77:7010 からのアクセスであるかを確認する
     KonomiTV の Windows サービスからサーバーをシャットダウンするために必要
     """
 
-    # HTTP リクエストの Host ヘッダーが 127.0.0.77:7010 である場合、Windows サービスプロセスからのアクセスと見なす
-    ## 通常アクセス時の Host ヘッダーは 192-168-1-11.local.konomi.tv:7000 のような形式になる
-    valid_host = f'127.0.0.77:{Config().server.port + 10}'
-    if request.headers.get('host', '').strip() == valid_host:
-        return None
-
-    # それ以外である場合、管理者ユーザーでログインしているかを確認する
-    if token is None:
-        logging.error('[MaintenanceRouter][GetCurrentAdminUserOrLocal] Not authenticated')
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = 'Not authenticated',
-            headers = {'WWW-Authenticate': 'Bearer'},
-        )
-    return await GetCurrentAdminUser(await GetCurrentUser(token))
+    return await GetCurrentAdminUser(await GetCurrentUserFromHeaders(request))
 
 
 @router.get(
@@ -173,9 +158,9 @@ async def UpdateDatabaseAPI():
     """
 
     await Channel.update()
-    await Channel.updateJikkyoStatus()
+    #await Channel.updateJikkyoStatus()
     await Program.update(multiprocess=True)
-    await TwitterAccount.updateAccountsInformation()
+    #await TwitterAccount.updateAccountsInformation()
 
 
 @router.post(

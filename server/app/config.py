@@ -246,6 +246,7 @@ class _ServerSettingsGeneral(BaseModel):
 
 class _ServerSettingsServer(BaseModel):
     port: PositiveInt = 7000
+    host: str | None = None
     custom_https_certificate: FilePath | None = None
     custom_https_private_key: FilePath | None = None
 

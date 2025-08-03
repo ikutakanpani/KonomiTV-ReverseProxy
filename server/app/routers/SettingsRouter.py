@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from app import logging
 from app.config import ClientSettings, Config, SaveConfig, ServerSettings
 from app.models.User import User
-from app.routers.UsersRouter import GetCurrentAdminUser, GetCurrentUser
+from app.routers.UsersRouter import GetCurrentAdminUser
 
 
 # ルーター
@@ -14,54 +14,6 @@ router = APIRouter(
     tags = ['Settings'],
     prefix = '/api/settings',
 )
-
-
-@router.get(
-    '/client',
-    summary = 'クライアント設定取得 API',
-    response_description = 'ログイン中のユーザーアカウントのクライアント設定。',
-    response_model = ClientSettings,
-)
-async def ClientSettingsAPI(
-    current_user: Annotated[User, Depends(GetCurrentUser)],
-):
-    """
-    現在ログイン中のユーザーアカウントのクライアント設定を取得する。<br>
-    JWT エンコードされたアクセストークンがリクエストの Authorization: Bearer に設定されていないとアクセスできない。
-    """
-    return current_user.client_settings
-
-
-@router.put(
-    '/client',
-    summary = 'クライアント設定更新 API',
-    status_code = status.HTTP_204_NO_CONTENT,
-)
-async def ClientSettingsUpdateAPI(
-    client_settings: Annotated[ClientSettings, Body(description='更新するクライアント設定のデータ。')],
-    current_user: Annotated[User, Depends(GetCurrentUser)],
-):
-    """
-    現在ログイン中のユーザーアカウントのクライアント設定を更新する。<br>
-    JWT エンコードされたアクセストークンがリクエストの Authorization: Bearer に設定されていないとアクセスできない。
-    """
-
-    # 現在サーバーに保存されているクライアント設定の最終同期時刻よりも古いクライアント設定が送られてきた場合、エラーを返す
-    current_client_settings = ClientSettings.model_validate(current_user.client_settings)
-    if client_settings.last_synced_at < current_client_settings.last_synced_at:
-        logging.error(f'[ClientSettingsUpdateAPI] Client settings are outdated! [{client_settings.last_synced_at} < {current_client_settings.last_synced_at}]')
-        raise HTTPException(
-            status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail = 'The client settings are outdated. Please update the client settings from the server.',
-        )
-
-    # dict に変換してから入れる
-    ## Pydantic モデルのままだと JSON にシリアライズできないので怒られる
-    current_user.client_settings = dict(client_settings)
-
-    # レコードを保存する
-    await current_user.save()
-
 
 @router.get(
     '/server',

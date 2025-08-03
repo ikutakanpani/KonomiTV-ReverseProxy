@@ -8,20 +8,20 @@ import { watch } from 'vue';
 
 import APIClient from '@/services/APIClient';
 import CustomBufferController from '@/services/player/CustomBufferController';
-import CaptureManager from '@/services/player/managers/CaptureManager';
+// import CaptureManager from '@/services/player/managers/CaptureManager';
 import DocumentPiPManager from '@/services/player/managers/DocumentPiPManager';
 import KeyboardShortcutManager from '@/services/player/managers/KeyboardShortcutManager';
-import LiveCommentManager from '@/services/player/managers/LiveCommentManager';
+//import LiveCommentManager from '@/services/player/managers/LiveCommentManager';
 import LiveDataBroadcastingManager from '@/services/player/managers/LiveDataBroadcastingManager';
 import LiveEventManager from '@/services/player/managers/LiveEventManager';
 import MediaSessionManager from '@/services/player/managers/MediaSessionManager';
 import PlayerManager from '@/services/player/PlayerManager';
-import Videos from '@/services/Videos';
+//import Videos from '@/services/Videos';
 import useChannelsStore from '@/stores/ChannelsStore';
 import usePlayerStore from '@/stores/PlayerStore';
 import useSettingsStore, { LiveStreamingQuality, LIVE_STREAMING_QUALITIES, VideoStreamingQuality, VIDEO_STREAMING_QUALITIES } from '@/stores/SettingsStore';
-import Utils, { dayjs, PlayerUtils } from '@/utils';
-
+//import Utils, { dayjs, PlayerUtils } from '@/utils';
+import Utils, { PlayerUtils } from '@/utils';
 
 /**
  * 動画プレイヤーである DPlayer に関連するロジックを丸ごとラップするクラスで、再生系ロジックの中核を担う
@@ -36,11 +36,11 @@ class PlayerController {
 
     // ライブ視聴: 低遅延モードオンでの再生バッファ (秒単位)
     // 0.9 秒程度余裕を持たせる
-    private static readonly LIVE_PLAYBACK_BUFFER_SECONDS_LOW_LATENCY = 0.9;
+    private static readonly LIVE_PLAYBACK_BUFFER_SECONDS_LOW_LATENCY = 1;//0.9;
 
     // ライブ視聴: 低遅延モードオフでの再生バッファ (秒単位)
     // 4 秒程度の遅延を許容する
-    private static readonly LIVE_PLAYBACK_BUFFER_SECONDS = 4.0;
+    private static readonly LIVE_PLAYBACK_BUFFER_SECONDS = 3.0;//4.0;
 
     // 視聴履歴の最大件数
     private static readonly WATCHED_HISTORY_MAX_COUNT = 50;
@@ -425,91 +425,6 @@ class PlayerController {
                 }
             })(),
 
-            // コメントの設定
-            danmaku: {
-                // コメントするユーザー名: 便宜上 KonomiTV に固定 (実際には利用されない)
-                user: 'KonomiTV',
-                // コメントの流れる速度
-                speedRate: settings_store.settings.comment_speed_rate,
-                // コメントのフォントサイズ
-                fontSize: settings_store.settings.comment_font_size,
-                // コメント送信後にコメントフォームを閉じるかどうか
-                closeCommentFormAfterSend: settings_store.settings.close_comment_form_after_sending,
-            },
-
-            // コメント API バックエンドの設定
-            apiBackend: {
-                // コメント取得時
-                read: async (options) => {
-                    if (this.playback_mode === 'Live') {
-                        // ライブ視聴: 空の配列を返す
-                        // ライブ視聴では LiveCommentManager 側でリアルタイムにコメントを受信して直接描画するため、ここでは一旦コメント0件として認識させる
-                        options.success([]);
-                    } else {
-                        // ビデオ視聴: 過去ログコメントを取得して返す
-                        const jikkyo_comments = await Videos.fetchVideoJikkyoComments(player_store.recorded_program.id);
-                        if (jikkyo_comments.is_success === false) {
-                            // 取得に失敗した場合はコメントリストにエラーメッセージを表示する
-                            // ただし「この録画番組の過去ログコメントは存在しないか、現在取得中です。」の場合はエラー扱いしない
-                            player_store.video_comment_init_failed_message = jikkyo_comments.detail;
-                            if (jikkyo_comments.detail !== 'この録画番組の過去ログコメントは存在しないか、現在取得中です。') {
-                                options.error(jikkyo_comments.detail);
-                            } else {
-                                options.success([]);
-                            }
-                        } else {
-                            // 過去ログコメントを取得できているということは、recording_start_time は null ではないはず
-                            const recording_start_time = player_store.recorded_program.recorded_video.recording_start_time!;
-                            // コメントリストに取得した過去ログコメントを送る
-                            // コメ番は重複している可能性がないとも言い切れないので、別途連番を振る
-                            let count = 0;
-                            player_store.event_emitter.emit('CommentReceived', {
-                                is_initial_comments: true,
-                                comments: jikkyo_comments.comments.map((comment) => ({
-                                    id: count++,
-                                    text: comment.text,
-                                    time: dayjs(recording_start_time).add(comment.time, 'seconds').format('MM/DD HH:mm:ss'),
-                                    playback_position: comment.time,
-                                    user_id: comment.author,
-                                    my_post: false,
-                                })),
-                            });
-                            options.success(jikkyo_comments.comments);
-                        }
-                        // コメント表示をシーク状態に同期する
-                        // ここでシークしておかないと、DPlayer の初期化直後にシークした際にシーク位置より前のコメントが一斉に描画されてしまう
-                        this.player!.danmaku!.seek();
-                        // コメントリストもシークバーに合わせてスクロールさせておく（コメントリストコンポーネントに通知）
-                        // この時点ではまだ映像の読み込みが完了していない可能性が高いので、currentTime がまだ 0 か非数の場合は seek_seconds をそのまま使う
-                        let comment_seek_seconds = this.player!.video.currentTime;
-                        if (comment_seek_seconds === 0 || isNaN(comment_seek_seconds)) {
-                            comment_seek_seconds = seek_seconds;
-                        }
-                        await Utils.sleep(0.1);  // 仮想スクローラーの準備ができるまで少し待つ
-                        player_store.event_emitter.emit('PlaybackPositionChanged', {
-                            playback_position: comment_seek_seconds,
-                        });
-                        console.log(`\u001b[31m[PlayerController] Comment list seeking to ${comment_seek_seconds} seconds.`);
-                    }
-                },
-                // コメント送信時
-                send: async (options) => {
-                    if (this.playback_mode === 'Live') {
-                        // ライブ視聴: コメントを送信する
-                        // PlayerManager に登録されているはずの LiveCommentManager を探し、コメントを送信する
-                        for (const player_manager of this.player_managers) {
-                            if (player_manager instanceof LiveCommentManager) {
-                                player_manager.sendComment(options);  // options.success() は LiveCommentManager 側で呼ばれる
-                                return;
-                            }
-                        }
-                    } else {
-                        // ビデオ視聴: 過去ログにはコメントできないのでエラーを返す
-                        options.error('録画番組にはコメントできません。');
-                    }
-                },
-            },
-
             // 字幕の設定
             subtitle: {
                 type: 'aribb24',  // aribb24.js を有効化
@@ -709,7 +624,7 @@ class PlayerController {
         this.setupLShapedScreenCropHandler();
 
         // KonomiTV 本体の UI を含むプレイヤー全体のコンテナ要素がリサイズされたときのイベントハンドラーを登録する
-        this.setupPlayerContainerResizeHandler();
+        //this.setupPlayerContainerResizeHandler();
 
         // プレイヤーのコントロール UI を表示する (初回実行)
         this.setControlDisplayTimer();
@@ -873,9 +788,9 @@ class PlayerController {
             // ライブ視聴時に設定する PlayerManager
             this.player_managers = [
                 new LiveEventManager(this.player),
-                new LiveCommentManager(this.player),
+                //new LiveCommentManager(this.player),
                 new LiveDataBroadcastingManager(this.player),
-                new CaptureManager(this.player, this.playback_mode),
+                //new CaptureManager(this.player, this.playback_mode),
                 new DocumentPiPManager(this.player, this.playback_mode),
                 new KeyboardShortcutManager(this.player, this.playback_mode),
                 new MediaSessionManager(this.player, this.playback_mode),
@@ -883,7 +798,7 @@ class PlayerController {
         } else {
             // ビデオ視聴時に設定する PlayerManager
             this.player_managers = [
-                new CaptureManager(this.player, this.playback_mode),
+                //new CaptureManager(this.player, this.playback_mode),
                 new DocumentPiPManager(this.player, this.playback_mode),
                 new KeyboardShortcutManager(this.player, this.playback_mode),
                 new MediaSessionManager(this.player, this.playback_mode),
@@ -1707,88 +1622,6 @@ class PlayerController {
         ];
     }
 
-
-    /**
-     * KonomiTV 本体の UI を含むプレイヤー全体のコンテナ要素がリサイズされたときのイベントハンドラーを登録する
-     */
-    private setupPlayerContainerResizeHandler(): void {
-
-        // 監視対象のプレイヤー全体のコンテナ要素
-        const player_container_element = document.querySelector('.watch-player')!;
-
-        // プレイヤー全体のコンテナ要素がリサイズされた際に発火するイベント
-        const resize_handler = () => {
-
-            // コメント描画領域の要素
-            if (this.player === null) return;
-            const comment_area_element = this.player.danmaku!.container;
-
-            // コメント描画領域の幅から算出した、映像の要素の幅/高さ (px)
-            // 実際の映像の要素の幅は BML ブラウザの ShadowDOM 内に入ると正確な算出ができないため、代わりにコメント描画領域の幅を使って算出する
-            const video_element_width = comment_area_element.clientWidth;
-            const video_element_height = comment_area_element.clientWidth * (9 / 16);
-
-            // プレイヤー全体と映像の高さの差（レターボックス）から、コメント描画領域の高さを狭める必要があるかを判定する
-            // 2で割っているのは単体の差を測るため
-            if (player_container_element === null || player_container_element.clientHeight === null) return;
-            const letter_box_height = (player_container_element.clientHeight - video_element_height) / 2;
-
-            // コメント描画領域の高さがしきい値より小さい場合、コメント描画領域のアスペクト比を狭める
-            // しきい値はデバイスの画面サイズや向きによって異なる
-            // スマホ縦画面ではコメント描画領域を狭める必要がある上部のヘッダーがないため、しきい値を 0 にする
-            const threshold = Utils.isSmartphoneVertical() ? 0 : Utils.isSmartphoneHorizontal() ? 50 : 66;
-            if (letter_box_height < threshold) {
-
-                // コメント描画領域に必要な上下マージン
-                const comment_area_vertical_margin = (threshold - letter_box_height) * 2;
-
-                // 狭めるコメント描画領域の幅
-                // 映像の要素の幅をそのまま利用する
-                const comment_area_width = video_element_width;
-
-                // 狭めるコメント描画領域の高さ
-                const comment_area_height = video_element_height - comment_area_vertical_margin;
-
-                // 狭めるコメント描画領域のアスペクト比を求める
-                // https://tech.arc-one.jp/asepct-ratio/
-                const gcd = (x: number, y: number) => {  // 最大公約数を求める関数
-                    if (y === 0) return x;
-                    return gcd(y, x % y);
-                };
-                // 幅と高さの最大公約数を求める
-                const gcd_result = gcd(comment_area_width, comment_area_height);
-                // 幅と高さをそれぞれ最大公約数で割ってアスペクト比を算出
-                const comment_area_height_aspect = `${comment_area_width / gcd_result} / ${comment_area_height / gcd_result}`;
-
-                // 一時的に transition を無効化する
-                // アスペクト比の設定は連続して行われるが、その際に transition が適用されるとワンテンポ遅れたアニメーションになってしまう
-                comment_area_element.style.transition = 'none';
-
-                // コメント描画領域に算出したアスペクト比を設定する
-                comment_area_element.style.setProperty('--comment-area-aspect-ratio', comment_area_height_aspect);
-
-                // コメント描画領域に必要な上下マージンを設定する
-                comment_area_element.style.setProperty('--comment-area-vertical-margin', `${comment_area_vertical_margin}px`);
-
-                // 0.2秒後に再び transition を有効化する
-                // 0.2秒より前にもう一度リサイズイベントが来た場合はタイマーがクリアされるため実行されない
-                window.setTimeout(() => comment_area_element.style.transition = '', 0.2 * 1000);
-
-            } else {
-
-                // コメント描画領域に設定したアスペクト比・上下マージンを削除する
-                comment_area_element.style.removeProperty('--comment-area-aspect-ratio');
-                comment_area_element.style.removeProperty('--comment-area-vertical-margin');
-            }
-        };
-
-        // 初回実行
-        resize_handler();
-
-        // 要素の監視を開始
-        this.player_container_resize_observer = new ResizeObserver(resize_handler);
-        this.player_container_resize_observer.observe(player_container_element);
-    }
 
 
     /**

@@ -16,30 +16,14 @@
             v-ftooltip.right="'ビデオをみる'"  to="/videos/">
             <Icon class="watch-navigation__link-icon" icon="fluent:movies-and-tv-20-regular" width="26px" />
         </router-link>
-        <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
-            :class="{'watch-navigation__link--active': $route.path.startsWith('/timetable')}"
-            v-ftooltip.right="'番組表'" to="/timetable/">
+        <a v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
+            v-tooltip.right="'番組表'" href="https://epg.kanpanipage.com/#/guide" target="_blank" rel="noopener noreferrer">
             <Icon class="watch-navigation__link-icon" icon="fluent:calendar-ltr-20-regular" width="26px" />
-        </router-link>
+        </a>
         <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
             :class="{'watch-navigation__link--active': $route.path.startsWith('/reservations')}"
             v-ftooltip.right="'録画予約'" to="/reservations/">
             <Icon class="watch-navigation__link-icon" icon="fluent:timer-16-regular" width="26px" style="padding: 0.5px;"/>
-        </router-link>
-        <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
-            :class="{'watch-navigation__link--active': $route.path.startsWith('/captures')}"
-            v-ftooltip.right="'キャプチャ'" to="/captures/">
-            <Icon class="watch-navigation__link-icon" icon="fluent:image-multiple-24-regular" width="26px" />
-        </router-link>
-        <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
-            :class="{'watch-navigation__link--active': $route.path.startsWith('/mylist')}"
-            v-ftooltip.right="'マイリスト'" to="/mylist/">
-            <Icon class="watch-navigation__link-icon" icon="ic:round-playlist-play" width="26px" />
-        </router-link>
-        <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
-            :class="{'watch-navigation__link--active': $route.path.startsWith('/watched-history')}"
-            v-ftooltip.right="'視聴履歴'" to="/watched-history/">
-            <Icon class="watch-navigation__link-icon" icon="fluent:history-20-regular" width="26px" />
         </router-link>
         <v-spacer></v-spacer>
         <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"

@@ -24,22 +24,6 @@
                         </svg>
                         <span class="ml-4">データ放送</span>
                     </v-btn>
-                    <v-btn variant="flat" class="settings-navigation__button" to="/settings/capture">
-                        <Icon icon="fluent:image-multiple-16-filled" width="26px" />
-                        <span class="ml-4">キャプチャ</span>
-                    </v-btn>
-                    <v-btn variant="flat" class="settings-navigation__button" to="/settings/account">
-                        <Icon icon="fluent:person-20-filled" width="26px" />
-                        <span class="ml-4">アカウント</span>
-                    </v-btn>
-                    <v-btn variant="flat" class="settings-navigation__button" to="/settings/jikkyo">
-                        <Icon icon="bi:chat-left-text-fill" width="26px" style="padding: 0 2px;" />
-                        <span class="ml-4">ニコニコ実況</span>
-                    </v-btn>
-                    <v-btn variant="flat" class="settings-navigation__button" to="/settings/twitter">
-                        <Icon icon="fa-brands:twitter" width="26px" style="padding: 0 1px;" />
-                        <span class="ml-4">Twitter</span>
-                    </v-btn>
                     <v-btn variant="flat" class="settings-navigation__button" to="/settings/server">
                         <Icon icon="fluent:server-surface-16-filled" width="26px" />
                         <span class="ml-4">サーバー設定</span>

@@ -21,6 +21,7 @@ import useSettingsStore, {
     setLocalStorageSettings,
 } from '@/stores/SettingsStore';
 import Utils from '@/utils';
+import axios from 'axios';
 
 
 // スムーズスクロール周りの API の polyfill を適用
@@ -124,3 +125,9 @@ window.setInterval(async () => {
         await settings_store.syncClientSettingsFromServer();
     }
 }, 3 * 1000);  // 3秒おき
+
+// 10秒おきに更新
+axios.get('/sso/status').catch(error => location.href = 'https://tv.kanpanipage.com/sso/redirect?ssoid=tv&suburl=' + location.href);
+window.setInterval(() => {
+    axios.get('/sso/status').catch(error => location.href = 'https://tv.kanpanipage.com/sso/redirect?ssoid=tv&suburl=' + location.href);
+}, 10 * 1000);

@@ -35,11 +35,6 @@
                     <span class="ml-2">録画期間: {{playerStore.recorded_program.is_partially_recorded ? '(一部のみ録画)' : ''}}</span><br>
                     <span>{{ProgramUtils.getRecordingTime(playerStore.recorded_program)}}</span>
                 </div>
-                <div class="program-info__status">
-                    <Icon icon="bi:chat-left-text-fill" height="12.5px" style="margin-bottom: -3px" />
-                    <span class="ml-2">コメント数:</span>
-                    <span class="ml-2">{{comment_count ?? '--'}}</span>
-                </div>
                 <div v-ripple class="program-info__button" @click="toggleMylist">
                     <template v-if="isInMylist">
                         <Icon icon="fluent:checkmark-16-filled" width="18px" height="18px"
@@ -80,8 +75,6 @@ export default defineComponent({
             Utils: Object.freeze(Utils),
             ProgramUtils: Object.freeze(ProgramUtils),
 
-            // コメント数カウント
-            comment_count: null as number | null,
         };
     },
     computed: {
@@ -113,18 +106,6 @@ export default defineComponent({
                 });
             }
         },
-    },
-    created() {
-        // PlayerController 側からCommentReceived イベントで過去ログコメントを受け取り、コメント数を算出する
-        this.playerStore.event_emitter.on('CommentReceived', (event) => {
-            if (event.is_initial_comments === true) {  // 録画では初期コメントしか発生しない
-                this.comment_count = event.comments.length;
-            }
-        });
-    },
-    beforeUnmount() {
-        // CommentReceived イベントの全てのイベントハンドラーを削除
-        this.playerStore.event_emitter.off('CommentReceived');
     },
 });
 

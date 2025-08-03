@@ -31,19 +31,6 @@
             <div class="program-info__next-time">
                 {{ProgramUtils.getProgramTime(channelsStore.channel.current.program_following)}}
             </div>
-            <div class="program-info__status">
-                <div class="program-info__status-force"
-                    :class="`program-info__status-force--${ChannelUtils.getChannelForceType(channelsStore.channel.current.jikkyo_force)}`">
-                    <Icon icon="fa-solid:fire-alt" height="14px" />
-                    <span class="ml-2">勢い:</span>
-                    <span class="ml-2">{{channelsStore.channel.current.jikkyo_force ?? '--'}} コメ/分</span>
-                </div>
-                <div class="program-info__status-viewers ml-5">
-                    <Icon icon="fa-solid:eye" height="14px" />
-                    <span class="ml-2">視聴数:</span>
-                    <span class="ml-1">{{channelsStore.channel.current.viewer_count}}</span>
-                </div>
-            </div>
         </section>
         <section class="program-detail-container">
             <div class="program-detail" :key="detail_heading"

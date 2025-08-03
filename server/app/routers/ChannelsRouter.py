@@ -17,12 +17,12 @@ from app import logging, schemas
 from app.config import Config
 from app.constants import HTTPX_CLIENT, LOGO_DIR, VERSION
 from app.models.Channel import Channel
-from app.routers.UsersRouter import GetCurrentUser
+#from app.routers.UsersRouter import GetCurrentUser
 from app.streams.LiveStream import LiveStream
 from app.utils import GetMirakurunAPIEndpointURL
 from app.utils.edcb.CtrlCmdUtil import CtrlCmdUtil
 from app.utils.edcb.EDCBUtil import EDCBUtil
-from app.utils.JikkyoClient import JikkyoClient
+#from app.utils.JikkyoClient import JikkyoClient
 
 
 # ルーター
@@ -512,35 +512,3 @@ async def ChannelLogoAPI(
         'ETag': GetETag(b'default'),
     })
 
-
-@router.get(
-    '/{channel_id}/jikkyo',
-    summary = 'ニコニコ実況 WebSocket URL API',
-    response_description = 'ニコニコ実況コメント送受信用 WebSocket API の情報。',
-    response_model = schemas.JikkyoWebSocketInfo,
-)
-async def ChannelJikkyoWebSocketInfoAPI(
-    request: Request,
-    channel: Annotated[Channel, Depends(GetChannel)],
-):
-    """
-    指定されたチャンネルに対応する、ニコニコ実況コメント送受信用 WebSocket API の情報を取得する。
-    """
-
-    # もし Authorization ヘッダーがあるなら、ログイン中のユーザーアカウントを取得する
-    current_user = None
-    if request.headers.get('Authorization') is not None:
-
-        # JWT アクセストークンを取得
-        _, user_access_token = get_authorization_scheme_param(request.headers.get('Authorization'))
-
-        # アクセストークンに紐づくユーザーアカウントを取得
-        ## もともとバリデーション用なので HTTPException が送出されるが、ここではエラーにする必要はないのでパス
-        try:
-            current_user = await GetCurrentUser(token=user_access_token)
-        except HTTPException:
-            pass
-
-    # ニコニココメント送受信用 WebSocket API の情報を取得する
-    jikkyo_client = JikkyoClient(channel.network_id, channel.service_id)
-    return await jikkyo_client.fetchWebSocketInfo(current_user)

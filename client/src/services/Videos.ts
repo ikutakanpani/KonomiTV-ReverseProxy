@@ -1,7 +1,6 @@
 
 import APIClient from  '@/services/APIClient';
 import { IChannel } from '@/services/Channels';
-import { CommentUtils } from '@/utils';
 
 /** ソート順序を表す型 */
 export type SortOrder = 'desc' | 'asc';
@@ -237,34 +236,6 @@ class Videos {
             return null;
         }
 
-        return response.data;
-    }
-
-
-    /**
-     * 録画番組の放送中に投稿されたニコニコ実況の過去ログコメントを取得する
-     * @param video_id 録画番組の ID
-     * @returns 過去ログコメントのリスト
-     */
-    static async fetchVideoJikkyoComments(video_id: number): Promise<IJikkyoComments> {
-
-        // API リクエストを実行
-        const response = await APIClient.get<IJikkyoComments>(`/videos/${video_id}/jikkyo`);
-
-        // エラー処理
-        if (response.type === 'error') {
-            APIClient.showGenericError(response, '過去ログコメントを取得できませんでした。');
-            return {
-                is_success: false,
-                comments: [],
-                detail: '過去ログコメントを取得できませんでした。',
-            };
-        }
-
-        // ミュート対象のコメントを除外して返す
-        response.data.comments = response.data.comments.filter((comment) => {
-            return CommentUtils.isMutedComment(comment.text, comment.author, comment.color, comment.type, comment.size) === false;
-        });
         return response.data;
     }
 
