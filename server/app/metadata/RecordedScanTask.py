@@ -183,6 +183,26 @@ class RecordedScanTask:
             self._is_running = False
 
 
+    async def safe_is_file(self, file_path: Union[str, anyio.Path]) -> bool:
+        """
+        ファイルが存在し、通常のファイルであるかを安全にチェックする。
+
+        - PermissionError やその他のファイルアクセスエラーが発生した場合は False を返す。
+        - ログに警告を記録する。
+        """
+        try:
+            path = file_path if isinstance(file_path, anyio.Path) else anyio.Path(file_path)
+            return await path.is_file()
+        except PermissionError:
+            logging.warning(f'{file_path}: Permission denied when checking file.')
+            return False
+        except FileNotFoundError:
+            return False
+        except OSError as e:
+            logging.warning(f'{file_path}: OSError during is_file check: {e}')
+            return False
+
+
     async def runBatchScan(self) -> None:
         """
         録画フォルダ以下の一括スキャンと DB への同期を実行する
@@ -265,7 +285,8 @@ class RecordedScanTask:
                         continue
                     # 録画ファイルが確実に存在することを確認する
                     ## 環境次第では、稀に glob で取得したファイルが既に存在しなくなっているケースがある
-                    if not await file_path.is_file():
+                    #if not await file_path.is_file():
+                    if not await self.safe_is_file(file_path):
                         continue
 
                     # 見つかったファイルを処理
@@ -278,7 +299,8 @@ class RecordedScanTask:
         async with transactions.in_transaction():
             for file_path, existing_db_recorded_video in existing_db_recorded_videos.items():
                 # ファイルの存在確認を非同期に行う
-                if not await file_path.is_file():
+                #if not await file_path.is_file():
+                if not await self.safe_is_file(file_path):
                     # RecordedVideo の親テーブルである RecordedProgram を削除すると、
                     # CASCADE 制約により RecordedVideo も同時に削除される (Channel は親テーブルにあたるため削除されない)
                     await existing_db_recorded_video.recorded_program.delete()
@@ -345,12 +367,13 @@ class RecordedScanTask:
             try:
                 # 万が一この時点でファイルが存在しない場合はスキップ
                 # ファイル変更イベント発火後に即座にファイルが削除される可能性も考慮
-                if not await file_path.is_file():
+                #if not await file_path.is_file():
+                if not await self.safe_is_file(file_path):
                     logging.warning(f'{file_path}: File does not exist after acquiring lock! ignored.')
                     # ロック管理辞書から不要になったロックを削除
                     async with self._file_locks_dict_lock:
                         if file_path in self._file_locks and not file_lock.locked():
-                           self._file_locks.pop(file_path, None)
+                            self._file_locks.pop(file_path, None)
                     return
 
                 # ファイルの状態をチェック
