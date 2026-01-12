@@ -122,7 +122,7 @@ const router = createRouter({
             path: '/settings/account',
             name: 'Settings Account',
             component: () => import('@/views/Settings/Account.vue'),
-        },
+        },/*
         {
             path: '/settings/jikkyo',
             name: 'Settings Jikkyo',
@@ -132,7 +132,7 @@ const router = createRouter({
             path: '/settings/twitter',
             name: 'Settings Twitter',
             component: () => import('@/views/Settings/Twitter.vue'),
-        },
+        },*/
         {
             path: '/settings/server',
             name: 'Settings Server',
