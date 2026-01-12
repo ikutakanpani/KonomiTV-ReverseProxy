@@ -41,3 +41,4 @@ export default Utils;
 export * from '@/utils/ChannelUtils';
 export * from '@/utils/PlayerUtils';
 export * from '@/utils/ProgramUtils';
+export * from '@/utils/Semaphore';

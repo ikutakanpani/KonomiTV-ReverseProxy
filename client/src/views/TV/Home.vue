@@ -33,6 +33,24 @@
                                         :src="`${Utils.api_base_url}/channels/${channel.id}/logo`">
                                     <div class="channel__broadcaster-content">
                                         <span class="channel__broadcaster-name">Ch: {{channel.channel_number}} {{channel.name}}</span>
+                                        <div class="channel__broadcaster-status">
+                                            <div class="channel__broadcaster-status-force"
+                                                :class="`channel__broadcaster-status-force--${ChannelUtils.getChannelForceType(channel.jikkyo_force)}`">
+                                                <svg class="iconify iconify--fa-solid" width="10.5px" height="12px" viewBox="0 0 448 512">
+                                                    <path fill="currentColor" d="M323.56 51.2c-20.8 19.3-39.58 39.59-56.22 59.97C240.08 73.62 206.28 35.53 168 0C69.74 91.17 0 209.96 0 281.6C0 408.85 100.29 512 224 512s224-103.15 224-230.4c0-53.27-51.98-163.14-124.44-230.4zm-19.47 340.65C282.43 407.01 255.72 416 226.86 416C154.71 416 96 368.26 96 290.75c0-38.61 24.31-72.63 72.79-130.75c6.93 7.98 98.83 125.34 98.83 125.34l58.63-66.88c4.14 6.85 7.91 13.55 11.27 19.97c27.35 52.19 15.81 118.97-33.43 153.42z"></path>
+                                                </svg>
+                                                <span class="ml-1">勢い:</span>
+                                                <span class="ml-1">{{channel.jikkyo_force ?? '--'}}</span>
+                                                <span style="margin-left: 3px;"> コメ/分</span>
+                                            </div>
+                                            <div class="channel__broadcaster-status-viewers ml-4">
+                                                <svg class="iconify iconify--fa-solid" width="15.75px" height="14px" viewBox="0 0 576 512">
+                                                    <path fill="currentColor" d="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144a143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79a47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"></path>
+                                                </svg>
+                                                <span class="ml-1">視聴数:</span>
+                                                <span class="ml-1">{{channel.viewer_count}}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div v-ripple class="channel__broadcaster-pin"
                                         v-ftooltip="isPinnedChannel(channel) ? 'ピン留めを外す' : 'ピン留めする'"
@@ -91,6 +109,12 @@
                 </div>
             </div>
         </main>
+        <div v-ripple class="floating-button" @click="$router.push('/timetable/')">
+            <div class="floating-button__content">
+                <Icon class="floating-button__icon" icon="fluent:calendar-20-regular" width="26px" />
+                <div class="floating-button__text">番組表</div>
+            </div>
+        </div>
     </div>
 </template>
 <script lang="ts">
@@ -774,12 +798,16 @@ export default defineComponent({
                             font-size: 14px;
                         }
                         @include smartphone-horizontal {
+                            display: block;
                             font-size: 14px;
-                            -webkit-line-clamp: 1;  // 1行までに制限
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
                         }
                         @include smartphone-vertical {
+                            display: block;
                             font-size: 14px;
-                            -webkit-line-clamp: 1;  // 1行までに制限
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
                         }
                     }
 
@@ -985,7 +1013,8 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
     position: fixed;
-    bottom: 72px;
+    // iPhone X 以降の Home Indicator の高さ分を考慮
+    bottom: calc(72px + env(safe-area-inset-bottom));
     right: 20px;
     padding: 12px 16px;
     background: rgb(var(--v-theme-background-lighten-2));

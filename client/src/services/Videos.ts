@@ -11,7 +11,7 @@ export type MylistSortOrder = 'mylist_added_desc' | 'mylist_added_asc' | 'record
 /** 録画ファイル情報を表すインターフェース */
 export interface IRecordedVideo {
     id: number;
-    status: 'Recording' | 'Recorded';
+    status: 'Recording' | 'Recorded' | 'AnalysisFailed';
     file_path: string;
     file_hash: string;
     file_size: number;
@@ -35,8 +35,36 @@ export interface IRecordedVideo {
     secondary_audio_sampling_rate: number | null;
     has_key_frames: boolean;
     cm_sections: { start_time: number; end_time: number; }[] | null;
+    thumbnail_info: IThumbnailInfo | null;
     created_at: string;
     updated_at: string;
+}
+
+/** サムネイル情報を表すインターフェース */
+export interface IThumbnailInfo {
+    version: number;
+    representative: IThumbnailImageInfo;
+    tile: IThumbnailTileInfo;
+}
+
+/** 代表サムネイル情報を表すインターフェース */
+export interface IThumbnailImageInfo {
+    format: 'WebP';
+    width: number;
+    height: number;
+}
+
+/** サムネイルタイル情報を表すインターフェース */
+export interface IThumbnailTileInfo {
+    format: 'WebP';
+    image_width: number;
+    image_height: number;
+    tile_width: number;
+    tile_height: number;
+    total_tiles: number;
+    column_count: number;
+    row_count: number;
+    interval_sec: number;
 }
 
 /** 録画ファイル情報を表すインターフェースのデフォルト値 */
@@ -66,6 +94,7 @@ export const IRecordedVideoDefault: IRecordedVideo = {
     secondary_audio_sampling_rate: null,
     has_key_frames: false,
     cm_sections: null,
+    thumbnail_info: null,
     created_at: '2000-01-01T00:00:00+09:00',
     updated_at: '2000-01-01T00:00:00+09:00',
 };
@@ -156,6 +185,7 @@ export interface IJikkyoComments {
     comments: IJikkyoComment[];
     detail: string;
 }
+
 
 class Videos {
 
@@ -268,18 +298,14 @@ class Videos {
 
 
     /**
-     * 録画番組のサムネイルを再作成する
+     * 録画番組のサムネイルを再生成する
      * @param video_id 録画番組の ID
-     * @param skip_tile_if_exists 既に存在する場合はサムネイルタイルの生成をスキップするかどうか (デフォルト: False)
-     * @returns サムネイル再作成に成功した場合は true
+     * @returns サムネイルの再生成に成功した場合は true
      */
-    static async regenerateThumbnail(video_id: number, skip_tile_if_exists: boolean = false): Promise<boolean> {
+    static async regenerateThumbnail(video_id: number): Promise<boolean> {
 
         // API リクエストを実行
         const response = await APIClient.post(`/videos/${video_id}/thumbnail/regenerate`, undefined, {
-            params: {
-                skip_tile_if_exists: skip_tile_if_exists ? 'true' : 'false',
-            },
             // 数分以上かかるのでタイムアウトを 30 分に設定
             timeout: 30 * 60 * 1000,
         });
@@ -288,7 +314,7 @@ class Videos {
         if (response.type === 'error') {
             switch (response.data.detail) {
                 default:
-                    APIClient.showGenericError(response, 'サムネイルの再作成に失敗しました。');
+                    APIClient.showGenericError(response, 'サムネイルの再生成に失敗しました。');
                     break;
             }
             return false;

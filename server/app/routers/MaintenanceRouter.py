@@ -16,6 +16,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordBearer
 from sse_starlette.sse import EventSourceResponse
+from tortoise.expressions import RawSQL
 
 from app import logging, schemas
 from app.config import Config
@@ -42,7 +43,6 @@ from app.routers.UsersRouter import GetCurrentAdminUser, GetCurrentUserFromHeade
 router = APIRouter(
     tags = ['Maintenance'],
     prefix = '/api/maintenance',
-    dependencies = [Depends(GetCurrentAdminUser)],  # 管理者ユーザーのみアクセス可能
 )
 
 # 録画フォルダの一括スキャン・バックグラウンド解析タスクの asyncio.Task インスタンス
@@ -154,7 +154,7 @@ async def UpdateDatabaseAPI():
     """
     データベースに保存されている、チャンネル情報・番組情報・Twitter アカウント情報などの外部 API に依存するデータをすべて更新する。<br>
     即座に外部 API からのデータ更新を反映させたい場合に利用する。<br>
-    JWT エンコードされたアクセストークンがリクエストの Authorization: Bearer に設定されていて、かつ管理者アカウントでないとアクセスできない。
+    このメンテナンス機能は管理者ユーザーでなくてもアクセスできる。
     """
 
     await Channel.update()
@@ -173,6 +173,7 @@ async def BatchScanAPI():
     録画フォルダ内の全 TS ファイルをスキャンし、メタデータを解析して DB に永続化する。<br>
     追加・変更があったファイルのみメタデータを解析し、DB に永続化する。<br>
     存在しない録画ファイルに対応するレコードを一括削除する。<br>
+    このメンテナンス機能は管理者ユーザーでなくてもアクセスできる。
     """
 
     global batch_scan_task
@@ -195,6 +196,7 @@ async def BatchScanAPI():
         # タスクの実行が完了するまで待機
         await batch_scan_task
     else:
+        logging.warning('[MaintenanceRouter][BatchScanAPI] Batch scan of recording folders is already running.')
         raise HTTPException(
             status_code = status.HTTP_429_TOO_MANY_REQUESTS,
             detail = 'Batch scan of recording folders is already running',
@@ -210,6 +212,7 @@ async def BackgroundAnalysisAPI():
     """
     キーフレーム情報が未解析の録画ファイルに対してキーフレーム情報を解析し、<br>
     サムネイルが未生成の録画ファイルに対してサムネイルを生成する。<br>
+    このメンテナンス機能は管理者ユーザーでなくてもアクセスできる。
     """
 
     global background_analysis_task
@@ -219,13 +222,26 @@ async def BackgroundAnalysisAPI():
         logging.info('Manual background analysis has started.')
 
         # キーフレーム情報が未生成、またはサムネイルが未生成の録画ファイルを取得
-        db_recorded_videos = await RecordedVideo.filter(status='Recorded')
+        ## メモリ使用量を抑えるため、key_frames などの大きなフィールドは取得せず、必要最低限のフィールドのみを取得する
+        ## has_key_frames は key_frames を読み込まずに SQL で判定する (key_frames のデフォルト値は '[]')
+        video_rows = await RecordedVideo.filter(status='Recorded').annotate(
+            has_key_frames=RawSQL("CASE WHEN key_frames != '[]' THEN 1 ELSE 0 END"),
+        ).values(
+            'id',
+            'recorded_program_id',
+            'file_path',
+            'file_hash',
+            'duration',
+            'container_format',
+            'has_key_frames',
+            'cm_sections',
+        )
 
         # 各録画ファイルに対して直列にバックグラウンド解析タスクを実行
         ## HDD は並列アクセスが遅いため、随時直列に実行していった方が結果的に早いことが多い
         ## すべて直列なので ProcessLimiter や DriveIOLimiter での制限は掛けていない
-        for db_recorded_video in db_recorded_videos:
-            file_path = anyio.Path(db_recorded_video.file_path)
+        for video_row in video_rows:
+            file_path = anyio.Path(video_row['file_path'])
             try:
                 if not await file_path.is_file():
                     logging.warning(f'{file_path}: File not found. Skipping...')
@@ -235,32 +251,32 @@ async def BackgroundAnalysisAPI():
                 tasks: list[Coroutine[Any, Any, None]] = []
 
                 # キーフレーム情報が未解析の場合、タスクに追加
-                if not db_recorded_video.has_key_frames:
-                    tasks.append(KeyFrameAnalyzer(file_path, db_recorded_video.container_format).analyzeAndSave())
+                if not video_row['has_key_frames']:
+                    tasks.append(KeyFrameAnalyzer(file_path, video_row['container_format']).analyzeAndSave())
 
                 # CM 区間情報が未解析の場合、タスクに追加
                 ## cm_sections が [] の時は「解析はしたが CM 区間がなかった/検出に失敗した」ことを表している
                 ## CM 区間解析はかなり計算コストが高い処理のため、一度解析に失敗した録画ファイルは再解析しない
-                if db_recorded_video.cm_sections is None:
+                if video_row['cm_sections'] is None:
                     tasks.append(CMSectionsDetector(
-                        file_path = anyio.Path(db_recorded_video.file_path),
-                        duration_sec = db_recorded_video.duration,
+                        file_path = anyio.Path(video_row['file_path']),
+                        duration_sec = video_row['duration'],
                     ).detectAndSave())
 
                 # サムネイルが未生成の場合、タスクに追加
                 # どちらか片方だけがないパターンも考えられるので、その場合もサムネイル生成を実行する
-                thumbnail_tile_path = anyio.Path(str(THUMBNAILS_DIR)) / f'{db_recorded_video.file_hash}_tile.webp'
-                thumbnail_path = anyio.Path(str(THUMBNAILS_DIR)) / f'{db_recorded_video.file_hash}.webp'
+                thumbnail_tile_path = anyio.Path(str(THUMBNAILS_DIR)) / f'{video_row["file_hash"]}_tile.webp'
+                thumbnail_path = anyio.Path(str(THUMBNAILS_DIR)) / f'{video_row["file_hash"]}.webp'
                 if (not await thumbnail_tile_path.is_file()) or (not await thumbnail_path.is_file()):
                     # 録画番組情報を取得
                     db_recorded_program = await RecordedProgram.all() \
                         .select_related('recorded_video') \
                         .select_related('channel') \
-                        .get_or_none(id=db_recorded_video.id)
+                        .get_or_none(id=video_row['recorded_program_id'])
                     if db_recorded_program is not None:
                         # RecordedProgram モデルを schemas.RecordedProgram に変換
                         recorded_program = schemas.RecordedProgram.model_validate(db_recorded_program, from_attributes=True)
-                        tasks.append(ThumbnailGenerator.fromRecordedProgram(recorded_program).generateAndSave(skip_tile_if_exists=True))
+                        tasks.append(ThumbnailGenerator.fromRecordedProgram(recorded_program).generateAndSave())
 
                 # タスクが存在する場合、同時実行
                 if tasks:
@@ -281,6 +297,7 @@ async def BackgroundAnalysisAPI():
         # タスクの実行が完了するまで待機
         await background_analysis_task
     else:
+        logging.warning('[MaintenanceRouter][BackgroundAnalysisAPI] Background analysis task is already running.')
         raise HTTPException(
             status_code = status.HTTP_429_TOO_MANY_REQUESTS,
             detail = 'Background analysis task is already running',
@@ -304,9 +321,11 @@ def ServerRestartAPI(
 
         # シグナルの送信対象の PID
         ## --reload フラグが付与されている場合のみ、Reloader の起動元である親プロセスの PID を利用する
-        target_process: psutil.Process = psutil.Process(os.getpid())
+        target_process = psutil.Process(os.getpid())
         if '--reload' in sys.argv:
-            target_process = target_process.parent()
+            parent_process = target_process.parent()
+            if parent_process is not None:
+                target_process = parent_process
 
         # 現在の Uvicorn サーバーを終了する
         if sys.platform == 'win32':
@@ -340,9 +359,11 @@ def ServerShutdownAPI(
 
         # シグナルの送信対象の PID
         ## --reload フラグが付与されている場合のみ、Reloader の起動元である親プロセスの PID を利用する
-        target_process: psutil.Process = psutil.Process(os.getpid())
+        target_process = psutil.Process(os.getpid())
         if '--reload' in sys.argv:
-            target_process = target_process.parent()
+            parent_process = target_process.parent()
+            if parent_process is not None:
+                target_process = parent_process
 
         # 現在の Uvicorn サーバーを終了する
         if sys.platform == 'win32':

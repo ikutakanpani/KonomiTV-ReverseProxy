@@ -64,7 +64,7 @@ async def GetCurrentAdminUser(current_user: Annotated[User, Depends(GetCurrentUs
 
     # 取得したユーザーが管理者ではない
     if current_user.is_admin is False:
-        logging.error(f'[GetCurrentAdminUser] Don\'t have permission to access this resource [user_id: {current_user.id}]')
+        logging.warning(f'[GetCurrentAdminUser] Don\'t have permission to access this resource. [user_id: {current_user.id}]')
         raise HTTPException(
             status_code = status.HTTP_403_FORBIDDEN,
             detail = 'Don\'t have permission to access this resource',

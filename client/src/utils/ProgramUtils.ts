@@ -327,6 +327,16 @@ export class ProgramUtils {
 
 
     /**
+     * 番組がショッピング・通販枠かどうかを判定する
+     * @param program 番組情報
+     * @returns ショッピング・通販枠なら true
+     */
+    static isShoppingProgram(program: IProgram): boolean {
+        return program.genres?.some((genre) => genre.middle === 'ショッピング・通販') ?? false;
+    }
+
+
+    /**
      * 番組情報中の[字]や[解]などの記号をいい感じに装飾する
      * @param program 番組情報のオブジェクト
      * @param key 番組情報のオブジェクトから取り出すプロパティのキー
@@ -434,9 +444,9 @@ export class ProgramUtils {
             // IRecordedProgram (録画番組) では発生しない
             if (program.duration === Infinity) {
                 if (is_short === true) {  // 時刻のみ
-                    return `${start_time.format('HH:mm')} ～ --:--`;
+                    return Utils.apply28HourClock(`${start_time.format('HH:mm')} ～ --:--`);
                 } else {
-                    return `${start_time.format('YYYY/MM/DD (dd) HH:mm')} ～ --:-- (放送時間未定)`;
+                    return Utils.apply28HourClock(`${start_time.format('YYYY/MM/DD (dd) HH:mm')} ～ --:-- (放送時間未定)`);
                 }
             }
 
@@ -445,12 +455,12 @@ export class ProgramUtils {
 
             if (is_short === true) {  // 時刻のみ
                 if ('recorded_video' in program) {
-                    return `${start_time.format('YYYY/MM/DD HH:mm')} ～ ${end_time.format('HH:mm')}`;  // 録画番組
+                    return Utils.apply28HourClock(`${start_time.format('YYYY/MM/DD HH:mm')} ～ ${end_time.format('HH:mm')}`);  // 録画番組
                 } else {
-                    return `${start_time.format('HH:mm')} ～ ${end_time.format('HH:mm')}`;  // 放送中/次の番組
+                    return Utils.apply28HourClock(`${start_time.format('HH:mm')} ～ ${end_time.format('HH:mm')}`);  // 放送中/次の番組
                 }
             } else {
-                return `${start_time.format('YYYY/MM/DD (dd) HH:mm')} ～ ${end_time.format('HH:mm')} (${duration}分)`;
+                return Utils.apply28HourClock(`${start_time.format('YYYY/MM/DD (dd) HH:mm')} ～ ${end_time.format('HH:mm')} (${duration}分)`);
             }
 
         // 放送休止中
@@ -486,7 +496,7 @@ export class ProgramUtils {
         // 分単位の番組長 (割り切れない場合は小数第2位で四捨五入)
         const duration = Math.round(recorded_program.recorded_video.duration / 60 * 100) / 100;
 
-        return `${start_time.format('YYYY/MM/DD (dd) HH:mm:ss')} ～ ${end_time.format('HH:mm:ss')} (${duration}分)`;
+        return Utils.apply28HourClock(`${start_time.format('YYYY/MM/DD (dd) HH:mm:ss')} ～ ${end_time.format('HH:mm:ss')} (${duration}分)`);
     }
 
 
@@ -611,6 +621,7 @@ export class ProgramUtils {
         return merged_table;
     }
 
+
     /**
      * ISO639 形式の言語コードが示す言語の名称を取得する
      * server/app/utils/TSInformation.py の TSInformation.getISO639LanguageCodeName() と同等の処理を行う
@@ -640,6 +651,7 @@ export class ProgramUtils {
             return 'その他の言語';
         }
     }
+
 
     /**
      * 番組の長さを「1:30:00」のような形式でフォーマットする

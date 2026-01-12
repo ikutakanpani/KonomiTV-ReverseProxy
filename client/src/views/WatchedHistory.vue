@@ -3,6 +3,7 @@
         <HeaderBar />
         <main>
             <Navigation />
+            <SPHeaderBar :hide-on-smartphone-vertical="true" />
             <div class="watched-history-container-wrapper">
                 <div class="watched-history-container">
                     <Breadcrumbs :crumbs="[
@@ -28,18 +29,20 @@
         </main>
     </div>
 </template>
-
 <script lang="ts" setup>
+
 import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import HeaderBar from '@/components/HeaderBar.vue';
 import Navigation from '@/components/Navigation.vue';
+import SPHeaderBar from '@/components/SPHeaderBar.vue';
 import RecordedProgramList from '@/components/Videos/RecordedProgramList.vue';
 import { IRecordedProgram } from '@/services/Videos';
 import Videos from '@/services/Videos';
 import useSettingsStore from '@/stores/SettingsStore';
+import useUserStore from '@/stores/UserStore';
 
 // ルーター
 const route = useRoute();
@@ -106,6 +109,10 @@ watch(() => settingsStore.settings.watched_history, async () => {
 
 // 開始時に実行
 onMounted(async () => {
+    // 事前にログイン状態を同期（トークンがあればユーザー情報を取得）
+    const userStore = useUserStore();
+    await userStore.fetchUser();
+
     // クエリパラメータから初期値を設定
     if (route.query.page) {
         current_page.value = parseInt(route.query.page as string);
@@ -116,8 +123,8 @@ onMounted(async () => {
 });
 
 </script>
-
 <style lang="scss" scoped>
+
 .watched-history-container-wrapper {
     display: flex;
     flex-direction: column;
@@ -147,4 +154,5 @@ onMounted(async () => {
         padding-top: 8px !important;
     }
 }
+
 </style>
