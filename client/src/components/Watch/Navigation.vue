@@ -16,10 +16,11 @@
             v-ftooltip.right="'ビデオをみる'"  to="/videos/">
             <Icon class="watch-navigation__link-icon" icon="fluent:movies-and-tv-20-regular" width="26px" />
         </router-link>
-        <a v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
-            v-tooltip.right="'番組表'" href="https://epg.kanpanipage.com/#/guide" target="_blank" rel="noopener noreferrer">
+        <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
+            :class="{'watch-navigation__link--active': $route.path.startsWith('/timetable')}"
+            v-ftooltip.right="'番組表'" to="/timetable/">
             <Icon class="watch-navigation__link-icon" icon="fluent:calendar-ltr-20-regular" width="26px" />
-        </a>
+        </router-link>
         <router-link v-ripple class="watch-navigation__link" active-class="watch-navigation__link--active"
             :class="{'watch-navigation__link--active': $route.path.startsWith('/reservations')}"
             v-ftooltip.right="'録画予約'" to="/reservations/">
