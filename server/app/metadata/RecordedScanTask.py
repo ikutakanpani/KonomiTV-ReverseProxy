@@ -376,12 +376,8 @@ class RecordedScanTask:
                         continue
                     # 録画ファイルが確実に存在することを確認する
                     ## 環境次第では、稀に glob で取得したファイルが既に存在しなくなっているケースがある
-<<<<<<< HEAD
                     #if not await file_path.is_file():
-                    if not await self.safe_is_file(file_path):
-=======
-                    if not await self.isFileExists(canonical_path):
->>>>>>> upstream/release
+                    if not await self.safe_is_file(canonical_path):
                         continue
                     if canonical_path_str in processed_canonical_paths:
                         continue
@@ -402,12 +398,8 @@ class RecordedScanTask:
         async with transactions.in_transaction():
             for index, (file_path, existing_recorded_video_summary) in enumerate(existing_db_recorded_videos.items(), start=1):
                 # ファイルの存在確認を非同期に行う
-<<<<<<< HEAD
                 #if not await file_path.is_file():
                 if not await self.safe_is_file(file_path):
-=======
-                if not await self.isFileExists(file_path):
->>>>>>> upstream/release
                     # RecordedVideo の親テーブルである RecordedProgram を削除すると、
                     # CASCADE 制約により RecordedVideo も同時に削除される (Channel は親テーブルにあたるため削除されない)
                     await RecordedProgram.filter(id=existing_recorded_video_summary.recorded_program_id).delete()
@@ -532,12 +524,8 @@ class RecordedScanTask:
             try:
                 # 万が一この時点でファイルが存在しない場合はスキップ
                 # ファイル変更イベント発火後に即座にファイルが削除される可能性も考慮
-<<<<<<< HEAD
                 #if not await file_path.is_file():
                 if not await self.safe_is_file(file_path):
-=======
-                if not await self.isFileExists(file_path):
->>>>>>> upstream/release
                     logging.warning(f'{file_path}: File does not exist after acquiring lock! ignored.')
                     # ロック管理辞書から不要になったロックを削除
                     async with self._file_locks_dict_lock:

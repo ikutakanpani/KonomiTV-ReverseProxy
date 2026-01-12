@@ -21,13 +21,6 @@
                         <Icon class="navigation__link-icon" icon="fluent:movies-and-tv-20-regular" width="26px" />
                         <span v-if="!iconOnly" class="navigation__link-text">ビデオをみる</span>
                     </router-link>
-<<<<<<< HEAD
-                    <a v-ripple class="navigation__link" active-class="navigation__link--active"
-                        :href='`https://epg.kanpanipage.com/#/guide?sso_relay=${WatchLoginUser.jws}`'>
-                        <Icon class="navigation__link-icon" icon="fluent:calendar-ltr-20-regular" width="26px" />
-                        <span class="navigation__link-text">番組表</span>
-                    </a>
-=======
                     <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/timetable/"
                         :class="{
                             'navigation__link--active': $route.path.startsWith('/timetable'),
@@ -37,7 +30,6 @@
                         <Icon class="navigation__link-icon" icon="fluent:calendar-ltr-20-regular" width="26px" />
                         <span v-if="!iconOnly" class="navigation__link-text">番組表</span>
                     </router-link>
->>>>>>> upstream/release
                     <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/reservations/"
                         :class="{
                             'navigation__link--active': $route.path.startsWith('/reservations'),
@@ -47,36 +39,6 @@
                         <Icon class="navigation__link-icon" icon="fluent:timer-16-regular" width="26px" style="padding: 0.5px;" />
                         <span v-if="!iconOnly" class="navigation__link-text">録画予約</span>
                     </router-link>
-<<<<<<< HEAD
-=======
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/captures/"
-                        :class="{
-                            'navigation__link--active': $route.path.startsWith('/captures'),
-                            'navigation__link--icon-only': iconOnly,
-                        }"
-                        v-ftooltip.right="iconOnly ? 'キャプチャ' : ''">
-                        <Icon class="navigation__link-icon" icon="fluent:image-multiple-24-regular" width="26px" />
-                        <span v-if="!iconOnly" class="navigation__link-text">キャプチャ</span>
-                    </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/mylist/"
-                        :class="{
-                            'navigation__link--active': $route.path.startsWith('/mylist'),
-                            'navigation__link--icon-only': iconOnly,
-                        }"
-                        v-ftooltip.right="iconOnly ? 'マイリスト' : ''">
-                        <Icon class="navigation__link-icon" icon="ic:round-playlist-play" width="26px" />
-                        <span v-if="!iconOnly" class="navigation__link-text">マイリスト</span>
-                    </router-link>
-                    <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/watched-history/"
-                        :class="{
-                            'navigation__link--active': $route.path.startsWith('/watched-history'),
-                            'navigation__link--icon-only': iconOnly,
-                        }"
-                        v-ftooltip.right="iconOnly ? '視聴履歴' : ''">
-                        <Icon class="navigation__link-icon" icon="fluent:history-20-regular" width="26px" />
-                        <span v-if="!iconOnly" class="navigation__link-text">視聴履歴</span>
-                    </router-link>
->>>>>>> upstream/release
                     <v-spacer></v-spacer>
                     <span class="navigation__link-text">USER {{WatchLoginUser.name}}</span>
                     <router-link v-ripple class="navigation__link" active-class="navigation__link--active" to="/settings/"

@@ -112,12 +112,12 @@ const router = createRouter({
             path: '/settings/data-broadcasting',
             name: 'Settings Data Broadcasting',
             component: () => import('@/views/Settings/DataBroadcasting.vue'),
-        },
+        },/*
         {
             path: '/settings/capture',
             name: 'Settings Capture',
             component: () => import('@/views/Settings/Capture.vue'),
-        },
+        },*/
         {
             path: '/settings/account',
             name: 'Settings Account',

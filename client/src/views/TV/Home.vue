@@ -33,6 +33,7 @@
                                         :src="`${Utils.api_base_url}/channels/${channel.id}/logo`">
                                     <div class="channel__broadcaster-content">
                                         <span class="channel__broadcaster-name">Ch: {{channel.channel_number}} {{channel.name}}</span>
+                                        <!--
                                         <div class="channel__broadcaster-status">
                                             <div class="channel__broadcaster-status-force"
                                                 :class="`channel__broadcaster-status-force--${ChannelUtils.getChannelForceType(channel.jikkyo_force)}`">
@@ -51,6 +52,7 @@
                                                 <span class="ml-1">{{channel.viewer_count}}</span>
                                             </div>
                                         </div>
+                                        -->
                                     </div>
                                     <div v-ripple class="channel__broadcaster-pin"
                                         v-ftooltip="isPinnedChannel(channel) ? 'ピン留めを外す' : 'ピン留めする'"
