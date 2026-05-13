@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import time
+from collections import deque
 from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, ClassVar, Literal, cast
 
@@ -834,7 +835,11 @@ class LiveEncodingTask:
                         ## 放送波の tsreadex への書き込みを最優先で行うため、非同期タスクとして実行する
                         ## ここで tsreadex への書き込みがブロックされると放送波の受信ループが止まり、ライブストリームの異常終了に繋がりかねない
                         if self.live_stream.psi_data_archiver is not None:
-                            background_tasks.add(asyncio.create_task(self.live_stream.psi_data_archiver.pushTSPacketData(chunk)))
+                            psi_task = asyncio.create_task(self.live_stream.psi_data_archiver.pushTSPacketData(chunk))
+                            background_tasks.add(psi_task)
+                            ## 完了時に background_tasks から自動削除することでメモリ蓄積を防ぐ
+                            ## done_callback がなければ完了済みタスクオブジェクトが background_tasks に際限なく残留し続ける
+                            psi_task.add_done_callback(background_tasks.discard)
 
                     # 並列タスク処理中に何らかの例外が発生した
                     # BrokenPipeError・asyncio.TimeoutError などが想定されるが、何が発生するかわからないためすべての例外をキャッチする
@@ -963,8 +968,9 @@ class LiveEncodingTask:
 
         # ***** エンコーダーの状態監視 *****
 
-        # エンコーダーの出力ログのリスト
-        lines: list[str] = []
+        # エンコーダーの出力ログのリスト (直近 300 行のみ保持してメモリ消費を抑える)
+        ## エラー発生時にログを表示する際に使うのは最大 150 行のみなので、300 行もあれば十分
+        lines: deque[str] = deque(maxlen=300)
 
         async def EncoderObServer() -> None:
 
@@ -1097,7 +1103,7 @@ class LiveEncodingTask:
                         result = self.live_stream.setStatus('Restart', 'エンコード中に予期しないエラーが発生しました。エンコードタスクを再起動しています… (ER-01F)')
                         # 直近 50 件のログを表示
                         if result is True:
-                            for log in lines[-51:-1]:
+                            for log in list(lines)[-51:-1]:
                                 logging.warning(log)
                 ## HWEncC
                 else:
@@ -1137,7 +1143,7 @@ class LiveEncodingTask:
                         result = self.live_stream.setStatus('Restart', 'エンコード中に予期しないエラーが発生しました。エンコードタスクを再起動しています… (ER-03H)')
                         # 直近 150 件のログを表示
                         if result is True:
-                            for log in lines[-151:-1]:
+                            for log in list(lines)[-151:-1]:
                                 logging.warning(log)
 
                 # エンコードタスクが終了しているか既にエンコーダープロセスが終了していたら、タスクを終了
@@ -1252,10 +1258,10 @@ class LiveEncodingTask:
                         # エンコーダーのログを表示 (FFmpeg は最後の50行、HWEncC は最後の150行を表示)
                         if result is True:
                             if ENCODER_TYPE == 'FFmpeg':
-                                for log in lines[-51:-1]:
+                                for log in list(lines)[-51:-1]:
                                     logging.warning(log)
                             else:
-                                for log in lines[-151:-1]:
+                                for log in list(lines)[-151:-1]:
                                     logging.warning(log)
 
                 # チューナーとの接続が切断された場合
@@ -1304,10 +1310,10 @@ class LiveEncodingTask:
                         # エンコーダーのログを表示 (FFmpeg は最後の50行、HWEncC は最後の150行を表示)
                         if result is True:
                             if ENCODER_TYPE == 'FFmpeg':
-                                for log in lines[-51:-1]:
+                                for log in list(lines)[-51:-1]:
                                     logging.warning(log)
                             else:
-                                for log in lines[-151:-1]:
+                                for log in list(lines)[-151:-1]:
                                     logging.warning(log)
 
                 # この時点で最新のライブストリームのステータスが Offline か Restart に変更されていたら、エンコードタスクの終了処理に移る

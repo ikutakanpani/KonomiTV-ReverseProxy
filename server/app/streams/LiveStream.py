@@ -358,7 +358,8 @@ class LiveStream:
         """
 
         # すべてのクライアントの接続を切断する
-        for client in self._clients:
+        ## list() でコピーしてからイテレートすることで、disconnect() 内の remove() によるスキップを防ぐ
+        for client in list(self._clients):
             # mpegts クライアントのみ、Queue に None を追加して接続切断を通知する
             if client.client_type == 'mpegts':
                 client.writeStreamData(None)
@@ -473,7 +474,9 @@ class LiveStream:
         now = time.time()
 
         # 接続している全てのクライアントの Queue にストリームデータを書き込む
-        for client in self._clients:
+        ## list() でコピーしてからイテレートすることで、ループ中に self._clients を変更しても安全に処理できる
+        ## コピーせずに直接イテレートすると、remove() で要素を削除した際に次の要素がスキップされる Python の既知の挙動がある
+        for client in list(self._clients):
 
             # タイムアウト秒数は 10 秒
             timeout = 10

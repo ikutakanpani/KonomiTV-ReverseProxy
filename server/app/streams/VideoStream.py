@@ -1,5 +1,3 @@
-# ruff: noqa: RUF006 <= 将来改修予定
-
 # Type Hints を指定できるように
 # ref: https://stackoverflow.com/a/33533514/17124142
 from __future__ import annotations
@@ -76,6 +74,13 @@ class VideoStream:
     # この辞書に録画視聴セッションに関する全てのデータが格納されている
     __instances: ClassVar[dict[str, VideoStream]] = {}
 
+    # 実行中の asyncio.Task への強参照を保持するセット
+    # ref: https://docs.astral.sh/ruff/rules/asyncio-dangling-task/
+    ## asyncio.Task は asyncio 内部で弱参照のみで管理されるため、
+    ## 外部に強参照がないとガベージコレクタに回収されて実行中に消滅する可能性がある
+    ## done_callback でセットから自動削除することで、完了済みタスクの参照が残留しないようにする
+    _task_refs: ClassVar[set[asyncio.Task[None]]] = set()
+
 
     # 必ずセッション ID ごとに1つのインスタンスになるように (Singleton)
     def __new__(cls, session_id: str, recorded_program: RecordedProgram, quality: QUALITY_TYPES) -> VideoStream:
@@ -104,7 +109,12 @@ class VideoStream:
 
             # キャンセルされない限り SESSION_TIMEOUT 秒後にインスタンスを破棄するタイマー
             # cancel_destroy_timer() を呼び出すことでタイマーをキャンセルできる
-            instance._cancel_destroy_timer = SetTimeout(lambda: asyncio.create_task(instance.destroy()), cls.SESSION_TIMEOUT)
+            ## asyncio.create_task() で生成したタスクの強参照を _task_refs で保持し、GC による早期回収を防ぐ
+            def _schedule_destroy_new(stream: VideoStream = instance) -> None:
+                task = asyncio.create_task(stream.destroy())
+                VideoStream._task_refs.add(task)
+                task.add_done_callback(VideoStream._task_refs.discard)
+            instance._cancel_destroy_timer = SetTimeout(_schedule_destroy_new, cls.SESSION_TIMEOUT)
 
             # 生成したインスタンスを登録する
             cls.__instances[session_id] = instance
@@ -176,7 +186,12 @@ class VideoStream:
         self._cancel_destroy_timer()
 
         # キャンセルされない限り SESSION_TIMEOUT 秒後にインスタンスを破棄するタイマーを設定する
-        self._cancel_destroy_timer = SetTimeout(lambda: asyncio.create_task(self.destroy()), self.SESSION_TIMEOUT)
+        ## asyncio.create_task() で生成したタスクの強参照を _task_refs で保持し、GC による早期回収を防ぐ
+        def _schedule_destroy_keepalive(stream: VideoStream = self) -> None:
+            task = asyncio.create_task(stream.destroy())
+            VideoStream._task_refs.add(task)
+            task.add_done_callback(VideoStream._task_refs.discard)
+        self._cancel_destroy_timer = SetTimeout(_schedule_destroy_keepalive, self.SESSION_TIMEOUT)
 
 
     def getBufferRange(self) -> tuple[float, float]:
@@ -355,7 +370,11 @@ class VideoStream:
             self._encoding_task = VideoEncodingTask(self)
 
             # 新しいエンコードタスクを開始
-            asyncio.create_task(self._encoding_task.run(segment_sequence))
+            ## クラスレベルのセットに強参照を保持し、GC によるタスクの早期回収を防ぐ
+            ## ref: https://docs.astral.sh/ruff/rules/asyncio-dangling-task/
+            encoding_task = asyncio.create_task(self._encoding_task.run(segment_sequence))
+            VideoStream._task_refs.add(encoding_task)
+            encoding_task.add_done_callback(VideoStream._task_refs.discard)
             logging.info(f'{self.log_prefix}[Segment {segment_sequence}] New Encoding Task Started.')
 
         # セグメントデータの Future が完了したらそのデータを返す

@@ -258,4 +258,6 @@ async def Shutdown():
 
 # shutdown イベントが発火しない場合も想定し、アプリケーションの終了時に Shutdown() が確実に呼ばれるように
 # atexit は同期関数しか実行できないので、asyncio.run() でくるむ
-atexit.register(asyncio.run, Shutdown())
+## Shutdown() と書くとモジュール読み込み時点でコルーチンオブジェクトが生成されてしまい、終了時には使えなくなる
+## lambda で遅延評価することで、終了時に毎回新しいコルーチンオブジェクトが生成されるようにする
+atexit.register(lambda: asyncio.run(Shutdown()))
