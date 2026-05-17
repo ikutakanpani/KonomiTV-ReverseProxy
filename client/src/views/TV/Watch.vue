@@ -11,7 +11,7 @@ import PlayerController from '@/services/player/PlayerController';
 import useChannelsStore from '@/stores/ChannelsStore';
 import usePlayerStore from '@/stores/PlayerStore';
 import useSettingsStore from '@/stores/SettingsStore';
-import Utils from '@/utils';
+import Utils, { dayjs } from '@/utils';
 
 // PlayerController のインスタンス
 // data() 内に記述すると再帰的にリアクティブ化され重くなる上リアクティブにする必要自体がないので、グローバル変数にしている
@@ -97,7 +97,7 @@ export default defineComponent({
 
             // 00秒までの残り秒数を取得
             // 現在 16:01:34 なら 26 (秒) になる
-            const residue_second = 60 - new Date().getSeconds();
+            const residue_second = 60 - dayjs().second();
 
             // 00秒になるまで待ってから実行するタイマー
             // 番組は基本1分単位で組まれているため、20秒や45秒など中途半端な秒数で更新してしまうと番組情報の反映が遅れてしまう

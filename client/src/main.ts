@@ -126,8 +126,14 @@ window.setInterval(async () => {
     }
 }, 3 * 1000);  // 3秒おき
 
-// 10秒おきに更新
-axios.get('/sso/status').catch(error => location.href = 'https://tv.kanpanipage.com/sso/redirect?ssoid=tv&suburl=' + location.href);
-window.setInterval(() => {
-    axios.get('/sso/status').catch(error => location.href = 'https://tv.kanpanipage.com/sso/redirect?ssoid=tv&suburl=' + location.href);
-}, 10 * 1000);
+// SSO 認証状態を確認し、未認証 (401/403) の場合のみ SSO ログインページにリダイレクトする
+// ネットワーク瞬断やサーバー一時エラー (5xx) での誤リダイレクトを防ぐため、認証エラーの場合のみリダイレクトする
+const checkSSOStatus = () => {
+    axios.get('/sso/status').catch(error => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            location.href = 'https://tv.kanpanipage.com/sso/redirect?ssoid=tv&suburl=' + location.href;
+        }
+    });
+};
+checkSSOStatus();
+window.setInterval(checkSSOStatus, 10 * 1000);

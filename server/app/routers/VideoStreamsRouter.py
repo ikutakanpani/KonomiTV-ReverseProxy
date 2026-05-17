@@ -24,9 +24,11 @@ async def ValidateVideoID(video_id: Annotated[int, Path(description='録画番�
     """ 録画番組 ID のバリデーション """
 
     # 指定された video_id が存在するか確認
-    recorded_program = await RecordedProgram.filter(id=video_id).get_or_none() \
+    # select_related() は get_or_none() の前に呼ぶ必要がある (get_or_none() はコルーチンを返すため)
+    recorded_program = await RecordedProgram.filter(id=video_id) \
         .select_related('recorded_video') \
-        .select_related('channel')
+        .select_related('channel') \
+        .get_or_none()
     if recorded_program is None:
         logging.error(f'[VideoStreamsRouter][ValidateVideoID] Specified video_id was not found. [video_id: {video_id}]')
         raise HTTPException(

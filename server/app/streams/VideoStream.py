@@ -303,7 +303,8 @@ class VideoStream:
 
             # HLS セグメント長の最小値・最大値・平均値をロギング
             # 最後のセグメントの長さは通常 SEGMENT_DURATION_SECONDS と一致しないので統計から除外している
-            if len(self._segments) > 0:
+            # セグメントが2個以上ないと除外後のリストが空になり min()/max() が ValueError・0除算になるため > 1 で判定する
+            if len(self._segments) > 1:
                 min_duration = min(segment.duration_seconds for segment in self._segments[:-1])
                 max_duration = max(segment.duration_seconds for segment in self._segments[:-1])
                 avg_duration = sum(segment.duration_seconds for segment in self._segments[:-1]) / (len(self._segments) - 1)
